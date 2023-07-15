@@ -1,0 +1,43 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="VAR.VAR._ReducedModel__get_vd" />
+          <option value="VAR.VAR._ReducedModel__get_irf" />
+          <option value="ReducedModel.ReducedModel._Estimation__estimate" />
+          <option value="ReducedModel.ReducedModel.irf_confid_intvl" />
+          <option value="ReducedModel.ReducedModel.irf_point_estimate" />
+          <option value="ReducedModel.ReducedModel.vd_point_estimate" />
+          <option value="VAR.VAR._ReducedModel__make_bootstrap_sample" />
+          <option value="VAR.VAR._ReducedModel__estimate" />
+          <option value="VAR.VAR._ReducedModel__make_confid_intvl" />
+          <option value="VAR.VAR._ReducedModel__make_irf_graph" />
+          <option value="VAR.VAR._ReducedModel__make_vd_graph" />
+          <option value="VAR.VAR._Estimation__estimate" />
+          <option value="palettable.tableau.BlueRed_6" />
+          <option value="SVAR.SVAR._ReducedModel__make_confid_intvl" />
+          <option value="SVAR.SVAR._ReducedModel__make_irf_graph" />
+          <option value="SVAR.SVAR._ReducedModel__make_vd_graph" />
+          <option value="SVAR.PointIdentifiedSVAR._ReducedModel__make_bootstrap_sample" />
+          <option value="SVAR.PointIdentifiedSVAR._Estimation__estimate" />
+          <option value="SVAR.PointIdentifiedSVAR.identify" />
+          <option value="SVAR.PointIdentifiedSVAR._ReducedModel__get_irf" />
+          <option value="SVAR.PointIdentifiedSVAR._ReducedModel__get_vd" />
+          <option value="SignRestriction.SignRestriction._ReducedModel__get_irf" />
+          <option value="SignRestriction.SignRestriction._ReducedModel__get_vd" />
+          <option value="ExclusionRestriction.ExclusionRestriction._ReducedModel__get_irf" />
+          <option value="ExclusionRestriction.ExclusionRestriction._ReducedModel__get_vd" />
+          <option value="BayesianSignRestriction.BayesianSignRestriction._ReducedModel__get_irf" />
+          <option value="BayesianSignRestriction.BayesianSignRestriction._ReducedModel__get_vd" />
+          <option value="PenaltyIdentification.PenaltyIdentification._ReducedModel__get_irf" />
+          <option value="PenaltyIdentification.PenaltyIdentification._ReducedModel__get_vd" />
+          <option value="SVAR.PointIdentifiedSVAR.__identify" />
+          <option value="SVAR.PointIdentifiedSVAR.solve" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
