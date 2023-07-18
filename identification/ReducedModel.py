@@ -133,7 +133,7 @@ class ReducedModel(Estimation):
         split = nv > max_cols
         n_cols = max_cols if split else nv
         n_rows = nv // max_cols + 1 if split else 1
-        x_ticks = range(h + 1)
+        x_ticks = range(h)
 
         # plotting
         for i in range(ns):

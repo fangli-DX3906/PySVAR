@@ -35,7 +35,7 @@ class SignRestriction(SetIdentifiedSVAR):
         else:
             self.direction = 'ascend'
 
-    def sort_row(self, mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def __sort_row(self, mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         c = []
         for i in list(range(self.n_vars))[::-1]:
             c.append(2 ** i)
@@ -72,7 +72,7 @@ class SignRestriction(SetIdentifiedSVAR):
         total = 0
         self.irf_mat = np.zeros((n_rotation, self.n_vars * self.n_shocks, h + 1))
         self.vd_mat = np.zeros((n_rotation, self.n_vars * self.n_shocks, h + 1))
-        self.irfs_mat = np.zeros((n_rotation, self.n_vars * self.n_shocks, self.H))
+        self.irf_max_mat = np.zeros((n_rotation, self.n_vars * self.n_shocks, self.H + 1))
 
         while counter < n_rotation:
             total += 1
@@ -80,7 +80,7 @@ class SignRestriction(SetIdentifiedSVAR):
             irfs = self._ReducedModel__get_irf(h=h, comp_mat=self.comp_mat, cov_mat=self.cov_mat, rotation=D)
             irf_sign = np.sign(np.sum(irfs[:, :length_to_check], axis=1).reshape((self.n_vars, self.n_vars)))
 
-            idx, sorted_signs = self.sort_row(irf_sign)
+            idx, sorted_signs = self.__sort_row(irf_sign)
             diff_sign = self.target_signs - sorted_signs
 
             if np.sum(diff_sign ** 2) == self.num_unrestricted:
@@ -92,9 +92,9 @@ class SignRestriction(SetIdentifiedSVAR):
                 irf_temp = self._ReducedModel__get_irf(h=self.H, comp_mat=self.comp_mat, cov_mat=self.cov_mat,
                                                        rotation=D)
                 irf_temp_h = irf_temp[:, :h + 1]
-                irf_temp_h_var = irf_temp[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :h + 1]
-                self.irfs_mat[counter - 1, :, :] = irf_temp
-                self.irf_mat[counter - 1, :, :] = irf_temp_h_var
+                irf_temp_need = irf_temp[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :h + 1]
+                self.irf_max_mat[counter - 1, :, :] = irf_temp[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
+                self.irf_mat[counter - 1, :, :] = irf_temp_need
                 vds = self._ReducedModel__get_vd(irfs=irf_temp_h)
                 self.vd_mat[counter - 1, :, :] = vds[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
 
@@ -102,7 +102,6 @@ class SignRestriction(SetIdentifiedSVAR):
         if vd_sig is None:
             vd_sig = irf_sig
         self.vd_cv(vd_sig=vd_sig)
-        self.irfs = np.percentile(self.irfs_mat, 50, axis=0)
 
         # TODO: incorporate HD
 

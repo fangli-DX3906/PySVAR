@@ -50,13 +50,15 @@ class SVAR(ReducedModel):
         return self.vd_point_estimate[:, h + 1]
 
     # TODO: check this
-    def __get_hd(self) -> np.ndarray:
+    def __get_hd(self,
+                 shocks: np.ndarray,
+                 irfs: np.ndarray) -> np.ndarray:
         hd = np.zeros((self.n_vars, self.n_obs - self.lag_order, self.n_vars))
         for iperiod in range(self.n_obs - self.lag_order):
             for ishock in range(self.n_vars):
                 for ivar in range(self.n_vars):
-                    shocks_ = self.shocks[ishock, :iperiod]
-                    hd[ivar, iperiod, ishock] = np.dot(self.irfs[ivar + ishock * self.n_vars, :iperiod], shocks_[::-1])
+                    shocks_ = shocks[ishock, :iperiod]
+                    hd[ivar, iperiod, ishock] = np.dot(irfs[ivar + ishock * self.n_vars, :iperiod], shocks_[::-1])
                     hd = hd.swapaxes(0, 2)
         return hd
 
@@ -95,11 +97,15 @@ class SVAR(ReducedModel):
 
     def hd_cv(self,
               hd_sig: Union[List[int], int]) -> None:
-        pass
+        if 'vd_mat' not in self.__dir__():
+            raise ValueError("bootstrap first")
+        self.vd_confid_intvl = self._ReducedModel__make_confid_intvl(mat=self.hd_mat, sigs=hd_sig)
+        if self.median_as_point_estimate:
+            self.vd_point_estimate = np.percentile(self.hd_mat, 50, axis=0)
 
     def plot_irf(self,
                  var_list: Optional[List[str]] = None,
-                 shock_list: Optional[List[int]] = None,
+                 shock_list: Optional[List[str]] = None,
                  sigs: Union[List[int], int] = None,
                  max_cols: int = 3,
                  with_ci: bool = True,
@@ -107,12 +113,13 @@ class SVAR(ReducedModel):
         if 'irf_point_estimate' not in self.__dir__():
             raise ValueError("IRFs should be estimated.")
 
-        if 'irf_confid_intvl' not in self.__dir__() and with_ci:
+        if with_ci:
             if sigs is None:
                 raise ValueError('Not specifying significance levels.')
             if not isinstance(sigs, list):
                 sigs = [sigs]
-            self.irf_cv(sigs)
+            if 'irf_confid_intvl' not in self.__dir__():
+                self.irf_cv(sigs)
 
         if self.irf_point_estimate.shape[1] != self.irf_mat.shape[2]:
             print('Warning: length for point estimate and confidence interval are not consistent!')
@@ -148,8 +155,8 @@ class SVAR(ReducedModel):
 
         if shock_list is None:
             shock_list = self.shock_names
-        elif not set(shock_list).issubset(set(range(self.n_vars))):
-            raise ValueError(f'The system only allows {self.n_vars} orthogonal shocks!')
+        elif not set(shock_list).issubset(set(self.shock_names)):
+            raise ValueError('Check the shock names!!')
 
         h = self.vd_point_estimate.shape[1]
         self._ReducedModel__make_vd_graph(h=h, var_list=var_list, shock_list=shock_list,
@@ -209,15 +216,25 @@ class PointIdentifiedSVAR(SVAR):
 
         self.irf_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
         self.vd_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
+        self.irf_max_mat = np.zeros((n_path, self.n_vars ** 2, self.H + 1))
+        self.shock_mat = np.zeros((n_path, self.H, self.n_vars))
         self.rotation_mat = np.zeros((n_path, self.n_vars, self.n_vars))
+        zs = np.zeros((self.lag_order, self.n_vars))
 
         for r in range(n_path):
             yr = self._ReducedModel__make_bootstrap_sample()
-            comp_mat_r, cov_mat_r, _, _, _ = self._Estimation__estimate(yr, self.lag_order)
+            comp_mat_r, cov_mat_r, res_r, _, _ = self._Estimation__estimate(yr, self.lag_order)
             cov_mat_r = cov_mat_r[:self.n_vars, :self.n_vars]
             rotationr = self.solve(comp_mat=comp_mat_r, cov_mat=cov_mat_r)
             self.rotation_mat[r, :, :] = rotationr
-            irfr = self._ReducedModel__get_irf(h, rotation=rotationr, comp_mat=comp_mat_r, cov_mat=cov_mat_r)
-            self.irf_mat[r, :, :] = irfr
-            vdr = self._ReducedModel__get_vd(irfs=irfr)
+            irfr = self._ReducedModel__get_irf(h=self.H, rotation=rotationr, comp_mat=comp_mat_r, cov_mat=cov_mat_r)
+            self.irf_max_mat[r, :, :] = irfr
+            _irfr = irfr[:, :h + 1]
+            self.irf_mat[r, :, :] = _irfr
+            vdr = self._ReducedModel__get_vd(irfs=_irfr)
             self.vd_mat[r, :, :] = vdr
+            # TODO: think about how to get HDs
+            # resids_r = np.concatenate((zs, res_r[:self.n_vars, :].T), axis=0)  # this is the true residuals
+            # shock_r = self.get_structural_shocks(chol=np.linalg.cholesky(cov_mat_r), rotation=rotationr, resid=resids_r)
+            # self.shock_mat[r, :, :] = shock_r
+            # self.hd_mat[r, :, :] = self.__get_hd(shock_r, irfr)

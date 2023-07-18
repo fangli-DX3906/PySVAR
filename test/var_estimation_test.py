@@ -22,7 +22,7 @@ var.bootstrap(h=h, n_path=500)
 var.plot_irf(sigs=[68, 80], with_ci=True)
 var.plot_vd()
 
-# EX2: replicate Kilian
+# EX2: replicate Kilian (2009)
 oil = spio.loadmat('/Users/fangli/PySVAR/PySVAR/data/oil.mat')
 oil = oil['data']
 names = ['OilProd', 'REA', 'OilPrice']
