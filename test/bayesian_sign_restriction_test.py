@@ -5,7 +5,7 @@ from time import perf_counter
 from bayesian.BayesianSignRestriction import BayesianSignRestriction
 from identification.SignRestriction import SignRestriction
 
-data = spio.loadmat('../data/estimation_test2.mat')
+data = spio.loadmat('../data/sign_res.mat')
 data = data['y']
 names = ['Output', 'TFP', 'Investment', 'StockReturn', 'Cash', 'CreditSpread', 'Uncertainty', 'Inflation']
 shocks = ['Supply', 'Financial', 'Uncertainty', 'Residual']

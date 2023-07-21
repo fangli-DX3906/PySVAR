@@ -86,7 +86,7 @@ class SignRestriction(SetIdentifiedSVAR):
             if np.sum(diff_sign ** 2) == self.num_unrestricted:
                 counter += 1
                 if verbose:
-                    print(f'{counter} accepted rotation/{n_rotation} required rotations')
+                    print(f'{counter} accepted rotations/{n_rotation} required rotations')
 
                 D = D[:, idx]
                 irf_temp = self._ReducedModel__get_irf(h=self.H, comp_mat=self.comp_mat, cov_mat=self.cov_mat,
