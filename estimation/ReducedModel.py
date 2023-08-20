@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import palettable.tableau as pt
 
 from utils.plot_params import *
-from Estimation import Estimation
+from estimation.Estimation import Estimation
 
 
 class ReducedModel(Estimation):
@@ -35,7 +35,7 @@ class ReducedModel(Estimation):
         self.criterion = info_criterion
 
     def fit(self) -> None:
-        self.comp_mat, self.cov, self.res, self.interp, self.x = self._Estimation__estimate(self.data, self.lag_order)
+        self.comp_mat, self.cov, self.res, self.interp, self.x = self.estimate(self.data, self.lag_order)
         self.coeff_mat = self.comp_mat[:self.n_vars]
         self.cov_mat = self.cov[:self.n_vars, :self.n_vars]
         self.intercepts = self.interp[:self.n_vars]

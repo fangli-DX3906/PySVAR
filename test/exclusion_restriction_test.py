@@ -1,7 +1,6 @@
-import pandas as pd
 import scipy.io as spio
 import numpy as np
-from VAR import VAR
+from estimation.VAR import VAR
 from ExclusionRestriction import ExclusionRestriction
 
 data = spio.loadmat('/Users/fangli/PySVAR/data/estimation_test.mat')

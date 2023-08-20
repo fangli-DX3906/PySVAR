@@ -2,7 +2,7 @@ import scipy.io as spio
 import numpy as np
 import pandas as pd
 import datetime as dt
-from identification.VAR import VAR
+from estimation.VAR import VAR
 
 # EX 1: estimate the VAR model
 data = spio.loadmat('/Users/fangli/PySVAR/PySVAR/data/estimation_test.mat')

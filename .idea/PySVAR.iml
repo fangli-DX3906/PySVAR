@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/distributions" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bayesian" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/utils" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/estimation" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

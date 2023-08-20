@@ -4,7 +4,7 @@ from scipy.linalg import null_space
 from typing import Union, Literal, List, Optional
 import datetime
 
-from SVAR import PointIdentifiedSVAR
+from estimation.SVAR import PointIdentifiedSVAR
 
 
 class PenaltyIdentification(PointIdentifiedSVAR):

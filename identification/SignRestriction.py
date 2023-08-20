@@ -3,7 +3,7 @@ import random
 from typing import Union, Literal, List, Tuple
 import numpy as np
 
-from SVAR import SetIdentifiedSVAR
+from estimation.SVAR import SetIdentifiedSVAR
 
 
 class SignRestriction(SetIdentifiedSVAR):
