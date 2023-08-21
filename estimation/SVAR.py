@@ -3,7 +3,7 @@ import random
 from typing import Union, Literal, List, Optional
 import numpy as np
 
-from ReducedModel import ReducedModel
+from Base import ReducedModel
 
 
 class SVAR(ReducedModel):

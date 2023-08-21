@@ -3,16 +3,19 @@ import random
 from typing import Union, Literal, List, Optional
 import numpy as np
 
-from ReducedModel import ReducedModel
+from Base import BaseModel
+from Plotter import Plotter
+from Tools import Tools
 
 
-class VAR(ReducedModel):
+class VAR(BaseModel):
     def __init__(self,
                  data: np.ndarray,
                  var_names: list,
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
                  date_start: datetime.datetime,
                  date_end: datetime.datetime,
+                 shock_names: Optional[List[str]] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
         super().__init__(data=data,
@@ -22,16 +25,27 @@ class VAR(ReducedModel):
                          date_end=date_end,
                          constant=constant,
                          info_criterion=info_criterion)
+        if shock_names is not None:
+            self.shock_names = shock_names
+        else:
+            self.shock_names = [f'shock{_ + 1}' for _ in range(self.n_vars)]
+        self.fit()
+        self.tool = Tools(data=data,
+                          lag_order=self.lag_order,
+                          comp_mat=self.comp_mat,
+                          cov_mat=self.cov_mat)
+        self.plotter = Plotter(var_names=var_names,
+                               shock_names=self.shock_names,
+                               date_frequency=date_frequency)
         self.H = self.n_obs - self.lag_order
 
     def irf(self, h: int) -> np.ndarray:
-        self.irf_max_point_estimate = self._ReducedModel__get_irf(h=self.H, comp_mat=self.comp_mat,
-                                                                  cov_mat=self.cov_mat)
-        self.irf_point_estimate = self.irf_max_point_estimate[:, :h + 1]
+        self.irf_point_estimate = self.tool._irfs_[:, :h + 1]
         return self.irf_point_estimate
 
     def vd(self, h: int) -> np.ndarray:
-        self.vd_point_estimate = self._ReducedModel__get_vd(self.irf_max_point_estimate[:, :h + 1])
+        irf_for_vd = self.tool._irfs_[:, :h + 1]
+        self.vd_point_estimate = self.tool.estimate_vd(irf_for_vd)
         return self.vd_point_estimate
 
     def bootstrap(self,
@@ -44,29 +58,29 @@ class VAR(ReducedModel):
 
         self.irf_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
         self.vd_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
-        self.irf_max_mat = np.zeros((n_path, self.n_vars ** 2, self.H + 1))
+        self.irf_mat_full = np.zeros((n_path, self.n_vars ** 2, self.H + 1))
 
         for r in range(n_path):
-            yr = self._ReducedModel__make_bootstrap_sample()
-            comp_mat_r, cov_mat_r, _, _, _ = self._Estimation__estimate(yr, self.lag_order)
+            yr = self.make_bootstrap_sample()
+            comp_mat_r, cov_mat_r, _, _, _ = self.estimate(yr, self.lag_order)
             cov_mat_r = cov_mat_r[:self.n_vars, :self.n_vars]
-            # TODO: next version, historical decomposition allows confidence interval
-            irfr = self._ReducedModel__get_irf(h=self.H, comp_mat=comp_mat_r, cov_mat=cov_mat_r)
-            self.irf_max_mat[r, :, :] = irfr
-            _irfr = irfr[:, :h + 1]
-            self.irf_mat[r, :, :] = _irfr
-            vdr = self._ReducedModel__get_vd(irfs=_irfr)
+            self.tool.update(data=yr, comp=comp_mat_r, cov=cov_mat_r)
+            irfr = self.tool.irf
+            self.irf_mat_full[r, :, :] = irfr
+            temp_irfr = irfr[:, :h + 1]
+            self.irf_mat[r, :, :] = temp_irfr
+            vdr = self.tool.estimate_vd(temp_irfr)
             self.vd_mat[r, :, :] = vdr
 
-    def irf_cv(self, sig_irf: Union[List[int], int]) -> None:
+    def irf_cv(self, sigs: Union[List[int], int]) -> None:
         if 'irf_mat' not in self.__dir__():
             raise ValueError("bootstrap first")
-        self.irf_confid_intvl = self._ReducedModel__make_confid_intvl(mat=self.irf_mat, sigs=sig_irf)
+        self.irf_confid_intvl = self.tool.make_confid_intvl(mat=self.irf_mat, sigs=sigs)
 
-    def vd_cv(self, sig_vd: Union[List[int], int]) -> None:
+    def vd_cv(self, sigs: Union[List[int], int]) -> None:
         if 'vd_mat' not in self.__dir__():
             raise ValueError("bootstrap first")
-        self.vd_confid_intvl = self._ReducedModel__make_confid_intvl(mat=self.vd_mat, sigs=sig_vd)
+        self.vd_confid_intvl = self.tool.make_confid_intvl(mat=self.vd_mat, sigs=sigs)
 
     def plot_irf(self,
                  var_list: Optional[List[str]] = None,
@@ -88,27 +102,36 @@ class VAR(ReducedModel):
 
         if self.irf_point_estimate.shape[1] != self.irf_mat.shape[2]:
             print('Warning: length for point estimate and confidence interval are not consistent!')
-            h = min(self.irf_point_estimate.shape[1], self.irf_mat.shape[2])
+            H = min(self.irf_point_estimate.shape[1], self.irf_mat.shape[2])
         else:
-            h = self.irf_point_estimate.shape[1]
+            H = self.irf_point_estimate.shape[1]
+        # H contains the init period
+        irf_plot = self.irf_point_estimate[:, :H]
+        itf_mat_plot = self.irf_mat[:, :, :H]
 
         if var_list is None:
             var_list = self.var_names
         elif not set(var_list).issubset(set(self.var_names)):
             raise ValueError('Check the variable names!')
+        else:
+            pass
 
         if shock_list is None:
             shock_list = self.shock_names
         elif not set(shock_list).issubset(set(range(self.n_vars))):
-            raise ValueError(f'The system only allows {self.n_vars} orthogonal shocks!')
+            raise ValueError('Check the shock names!')
         else:
-            _shock_list = []
-            for i in shock_list:
-                _shock_list.append(f'orth_shock_{i + 1}')
-            shock_list = _shock_list
+            pass
 
-        self._ReducedModel__make_irf_graph(h=h, var_list=var_list, shock_list=shock_list,
-                                           sigs=sigs, max_cols=max_cols, with_ci=with_ci)
+        self.plotter.plot_irf(h=H,
+                              var_list=var_list,
+                              shock_list=shock_list,
+                              sigs=sigs,
+                              irf=irf_plot,
+                              with_ci=with_ci,
+                              max_cols=max_cols,
+                              irf_cv=itf_mat_plot,
+                              save_path=save_path)
 
     def plot_vd(self,
                 var_list: Optional[List[str]] = None,
@@ -122,17 +145,20 @@ class VAR(ReducedModel):
             var_list = self.var_names
         elif not set(var_list).issubset(set(self.var_names)):
             raise ValueError('Check the variable names!')
+        else:
+            pass
 
         if shock_list is None:
             shock_list = self.shock_names
         elif not set(shock_list).issubset(set(range(self.n_vars))):
             raise ValueError(f'The system only allows {self.n_vars} orthogonal shocks!')
         else:
-            _shock_list = []
-            for i in shock_list:
-                _shock_list.append(f'orth_shock_{i + 1}')
-            shock_list = _shock_list
+            pass
 
-        h = self.vd_point_estimate.shape[1]
-        self._ReducedModel__make_vd_graph(h=h, var_list=var_list, shock_list=shock_list, max_cols=max_cols,
-                                          save_path=save_path)
+        H = self.vd_point_estimate.shape[1]
+        self.plotter.plot_vd(h=H,
+                             var_list=var_list,
+                             shock_list=shock_list,
+                             vd=self.vd_point_estimate,
+                             max_cols=max_cols,
+                             save_path=save_path)
