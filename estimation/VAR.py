@@ -35,7 +35,8 @@ class VAR(BaseModel):
         self.tool = Tools(data=data,
                           lag_order=self.lag_order,
                           comp_mat=self.comp_mat,
-                          cov_mat=self.cov_mat)
+                          cov_mat=self.cov_mat,
+                          rotation=np.ones(self.n_vars))
         self.plotter = Plotter(var_names=var_names,
                                shock_names=self.shock_names,
                                date_frequency=date_frequency)

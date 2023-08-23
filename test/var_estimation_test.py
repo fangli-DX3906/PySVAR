@@ -11,7 +11,7 @@ shocks = ['Supply', 'Agg Demand', 'Specific Demand']
 exm = VAR(data=oil, var_names=names, date_frequency='M', lag_order=24,
           date_start=dt.datetime(1973, 1, 1), date_end=dt.datetime(2007, 11, 30))
 
-# estimate the IRF
+# estimate the IRF (Figure 3)
 h = 15
 exm.irf(h=h)
 exm.vd(h=h)

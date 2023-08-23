@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Literal
 
 
 class Tools:
@@ -15,13 +15,11 @@ class Tools:
         self.cov_mat = cov_mat
         self.rotation = rotation
         self.n_obs_, self.n_vars_ = self.data.shape
-        if rotation is None:
-            self.rotation = np.eye(self.n_vars_)
-        else:
-            self.rotation = rotation
-        self.estimate_irf()
-        # self._irfs_ is the point estimate, self.irf varies with each update
-        self._irfs_ = self.irf
+        self.rotation = rotation
+        if not rotation is None:
+            self.estimate_irf()
+            # self._irfs_ is the point estimate for VAR, self.irf varies with each update
+            self._irfs_ = self.irf
 
     def estimate_irf(self) -> None:
         j = np.concatenate((np.eye(self.n_vars_), np.zeros((self.n_vars_, self.n_vars_ * (self.lag_order_ - 1)))),
