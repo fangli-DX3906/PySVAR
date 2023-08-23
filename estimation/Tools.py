@@ -7,7 +7,7 @@ class Tools:
                  data: np.ndarray,
                  lag_order: int,
                  comp_mat: np.ndarray,
-                 cov_mat: np.ndarry,
+                 cov_mat: np.ndarray,
                  rotation: Optional[np.ndarray] = None):
         self.data = data
         self.lag_order_ = lag_order
@@ -24,14 +24,14 @@ class Tools:
         self._irfs_ = self.irf
 
     def estimate_irf(self) -> None:
-        j = np.concatenate((np.eye(self.n_vars_), np.zeros((self.n_vars_, self.n_vars_ * (self.lag_order - 1)))),
+        j = np.concatenate((np.eye(self.n_vars_), np.zeros((self.n_vars_, self.n_vars_ * (self.lag_order_ - 1)))),
                            axis=1)
-        aa = np.eye(self.n_vars_ * self.lag_order)
+        aa = np.eye(self.n_vars_ * self.lag_order_)
         # cholesky gives you the lower triangle in numpy
         chol = np.linalg.cholesky(self.cov_mat)
         irf = np.dot(np.dot(np.dot(np.dot(j, aa), j.T), chol), self.rotation)
         irf = irf.reshape((self.n_vars_ ** 2, -1), order='F')
-        for i in range(1, self.n_obs_ - self.n_vars_ + 1):
+        for i in range(1, self.n_obs_ - self.lag_order_ + 1):
             aa = np.dot(aa, self.comp_mat)
             temp = np.dot(np.dot(np.dot(np.dot(j, aa), j.T), chol), self.rotation)
             temp = temp.reshape((self.n_vars_ ** 2, -1), order='F')

@@ -1,7 +1,7 @@
 import numpy as np
 from pandas import date_range
 import datetime
-from typing import Literal
+from typing import Literal, Optional
 import random
 
 from estimation.Estimation import Estimation
@@ -14,6 +14,7 @@ class BaseModel(Estimation):
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
                  date_start: datetime.datetime,
                  date_end: datetime.datetime,
+                 lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
         super().__init__(data, constant)
@@ -25,7 +26,10 @@ class BaseModel(Estimation):
         self.date_end = date_end
         self.date_time_span = list(date_range(start=date_start, end=date_end, freq=date_frequency).to_pydatetime())
         self.date_frequency = date_frequency
-        self.lag_order = self.optim_lag(y=self.data, criterion=info_criterion)
+        if lag_order:
+            self.lag_order = lag_order
+        else:
+            self.lag_order = self.optim_lag(y=self.data, criterion=info_criterion)
         self.identity = np.eye(self.n_vars)
         self.constant = constant
         self.criterion = info_criterion

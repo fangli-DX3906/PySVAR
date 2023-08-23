@@ -15,6 +15,7 @@ class VAR(BaseModel):
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
                  date_start: datetime.datetime,
                  date_end: datetime.datetime,
+                 lag_order: Optional[int] = None,
                  shock_names: Optional[List[str]] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -23,6 +24,7 @@ class VAR(BaseModel):
                          date_frequency=date_frequency,
                          date_start=date_start,
                          date_end=date_end,
+                         lag_order=lag_order,
                          constant=constant,
                          info_criterion=info_criterion)
         if shock_names is not None:
@@ -107,7 +109,9 @@ class VAR(BaseModel):
             H = self.irf_point_estimate.shape[1]
         # H contains the init period
         irf_plot = self.irf_point_estimate[:, :H]
-        itf_mat_plot = self.irf_mat[:, :, :H]
+        for sig in sigs:
+            for bound in ['lower', 'upper']:
+                self.irf_confid_intvl[sig][bound] = self.irf_confid_intvl[sig][bound][:, :H]
 
         if var_list is None:
             var_list = self.var_names
@@ -130,7 +134,7 @@ class VAR(BaseModel):
                               irf=irf_plot,
                               with_ci=with_ci,
                               max_cols=max_cols,
-                              irf_cv=itf_mat_plot,
+                              irf_cv=self.irf_confid_intvl,
                               save_path=save_path)
 
     def plot_vd(self,

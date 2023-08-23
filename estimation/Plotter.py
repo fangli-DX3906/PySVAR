@@ -49,7 +49,9 @@ class Plotter:
                 plt.axhline(y=0, color='black', linestyle='-', linewidth=3)
                 if with_ci:
                     for sig, alpha in zip(sigs, alpha_list[1:]):
-                        plt.fill_between(x_ticks, irf_cv[sig]['lower'][row, :h + 1], irf_cv[sig]['upper'][row, :h + 1],
+                        plt.fill_between(x_ticks,
+                                         irf_cv[sig]['lower'][row, :h + 1],
+                                         irf_cv[sig]['upper'][row, :h + 1],
                                          alpha=alpha, edgecolor=color, facecolor=color, linewidth=0)
                 plt.xlim(0, h)
                 plt.xticks(list(range(0, h, 5)))
