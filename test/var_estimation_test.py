@@ -13,9 +13,9 @@ exm = VAR(data=oil, var_names=names, date_frequency='M', lag_order=24,
 
 # estimate the IRF (Figure 3)
 h = 15
-exm.irf(h=h)
-exm.vd(h=h)
-exm.bootstrap(h=h, seed=3906)
+_ = exm.irf(h=h)
+_ = exm.vd(h=h)
+exm.bootstrap(seed=3906)
 exm.irf_point_estimate[0, :] = -np.cumsum(exm.irf_point_estimate[0, :])
 exm.irf_point_estimate[3, :] = np.cumsum(exm.irf_point_estimate[3, :])
 exm.irf_point_estimate[6, :] = np.cumsum(exm.irf_point_estimate[6, :])

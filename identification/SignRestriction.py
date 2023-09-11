@@ -1,6 +1,6 @@
 import datetime
 import random
-from typing import Union, Literal, List, Tuple, Optional
+from typing import Literal, Tuple, Optional
 import numpy as np
 
 from estimation.SVAR import SetIdentifiedSVAR
@@ -56,12 +56,11 @@ class SignRestriction(SetIdentifiedSVAR):
         return Q
 
     def identify(self,
-                 # h: int,
                  n_rotation: int,
                  length_to_check: int = 1,
-                 seed: Union[bool, int] = False,
+                 seed: Optional[int] = None,
                  verbose: bool = False) -> None:
-        if seed:
+        if seed is not None:
             np.random.seed(seed)
             random.seed(seed)
 
@@ -75,25 +74,16 @@ class SignRestriction(SetIdentifiedSVAR):
             self.tool.update(rotation=D)
             self.tool.estimate_irf(length=length_to_check)
             _irfs_ = self.tool.irf
-            irf_sign = np.sign(np.sum(_irfs_[:, :length_to_check], axis=1).reshape((self.n_vars, self.n_vars)))
+            irf_sign = np.sign(np.sum(_irfs_, axis=1).reshape((self.n_vars, self.n_vars)))
             idx, sorted_signs = self._sort_row(irf_sign)
             diff_sign = self.target_signs - sorted_signs
-
             if np.sum(diff_sign ** 2) == self.num_unrestricted:
                 counter += 1
                 if verbose:
                     print(f'{counter} accepted rotations/{n_rotation} required rotations')
                 D = D[:, idx]
                 self.rotation_list.append(D)
-                # self.tool.update(rotation=D)
-                # irfr_full = self.tool.irf
-                # self.irf_full_mat[counter - 1, :, :] = irfr_full[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
-                # # irf_needed = irfr_full[:, :h + 1]
-                # # self.irf_mat[counter - 1, :, :] = irf_needed[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
-                # vdr = self.tool.estimate_vd(irfs=irfr_full)
-                # self.vd_mat[counter - 1, :, :] = vdr[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
 
-        # TODO: incorporate HD
         print('*' * 30)
-        print(f'acceptance rate is {counter / total}')
-        self._calc_full_irf()
+        print(f'acceptance rate: {round(counter / total, 4) * 100}%')
+        self.full_irf()

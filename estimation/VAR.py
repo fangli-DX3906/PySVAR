@@ -43,6 +43,7 @@ class VAR(BaseModel):
         self.H = self.n_obs - self.lag_order
 
     def irf(self, h: int) -> np.ndarray:
+        # irf_point_estimate keeps track of the longest possible IRF, so does vd_point_estimate
         self.irf_point_estimate = self.tool._irfs_
         return self.irf_point_estimate[:, :h + 1]
 
@@ -51,15 +52,12 @@ class VAR(BaseModel):
         return self.vd_point_estimate[:, :h + 1]
 
     def bootstrap(self,
-                  h: int,
                   n_path: int = 100,
                   seed: Union[bool, int] = False) -> None:
         if seed:
             np.random.seed(seed)
             random.seed(seed)
 
-        # self.irf_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
-        # self.vd_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
         self.irf_mat_full = np.zeros((n_path, self.n_vars ** 2, self.H + 1))
         self.vd_mat_full = np.zeros((n_path, self.n_vars ** 2, self.H + 1))
 
@@ -71,28 +69,20 @@ class VAR(BaseModel):
             self.tool.estimate_irf()
             self.irf_mat_full[r, :, :] = self.tool.irf
             self.vd_mat_full[r, :, :] = self.tool.estimate_vd(self.tool.irf)
-            # irfr = self.tool.irf
-            # self.irf_mat_full[r, :, :] = irfr
-            # temp_irfr = irfr[:, :h + 1]
-            # self.irf_mat[r, :, :] = temp_irfr
-            # vdr = self.tool.estimate_vd(temp_irfr)
-            # self.vd_mat[r, :, :] = vdr
 
-    def irf_cv(self,
-               h: int,
-               sigs: Union[List[int], int]) -> dict:
-        if 'irf_mat_full' not in self.__dir__():
-            raise ValueError("bootstrap first")
-        self.irf_confid_intvl = self.tool.make_confid_intvl(mat=self.irf_mat_full[:, :h + 1], sigs=sigs)
-        return self.irf_confid_intvl
-
-    def vd_cv(self,
-              h: int,
-              sigs: Union[List[int], int]) -> dict:
-        if 'vd_mat_full' not in self.__dir__():
-            raise ValueError("bootstrap first")
-        self.vd_confid_intvl = self.tool.make_confid_intvl(mat=self.vd_mat_full[:, :h + 1], sigs=sigs)
-        return self.vd_confid_intvl
+    def calc_confid_intvl(self,
+                          h: int,
+                          which: Literal['irf', 'vd'],
+                          sigs: Union[List[int], int]) -> dict:
+        if which == 'irf':
+            if 'irf_mat_full' not in self.__dir__():
+                raise ValueError("bootstrap first")
+            mat = self.irf_mat_full[:, :, :h + 1]
+        else:
+            if 'vd_mat_full' not in self.__dir__():
+                raise ValueError("bootstrap first")
+            mat = self.vd_mat_full[:, :, :h + 1]
+        return self.tool.make_confid_intvl(mat=mat, sigs=sigs)
 
     def plot_irf(self,
                  h: int,
@@ -107,10 +97,10 @@ class VAR(BaseModel):
 
         if with_ci:
             if sigs is None:
-                raise ValueError('Not specifying significance levels.')
+                raise ValueError('Not specifying the significance levels.')
             if not isinstance(sigs, list):
                 sigs = [sigs]
-            cv_plot = self.irf_cv(h=h, sigs=sigs)
+            cv_plot = self.calc_confid_intvl(h=h, which='irf', sigs=sigs)
         else:
             cv_plot = None
 

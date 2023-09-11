@@ -53,6 +53,7 @@ class Tools:
         vd = vd.T.reshape((self.n_vars_ ** 2, -1))
         return vd
 
+    # TODO: check this
     def estimate_hd(self,
                     shocks: np.ndarray,
                     irfs: np.ndarray) -> np.ndarray:
