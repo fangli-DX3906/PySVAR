@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.optimize as spo
-from typing import Union, Literal, Optional, Set
+from typing import Literal, Optional, Set
 import datetime
 
 from estimation.SVAR import PointIdentifiedSVAR
@@ -64,11 +64,3 @@ class ExclusionRestriction(PointIdentifiedSVAR):
         sol = spo.minimize(fun=target_func, x0=np.ones(len(self.unrestricted)))
         rotation = np.linalg.inv(self.assign_non_zero_elements(sol.x))
         return rotation
-
-    def identify(self):
-        self.rotation = self.solve()
-        self.tool.update(rotation=self.rotation)
-        self.tool.estimate_irf()
-        self.irf_point_estimate = self.tool.irf
-        self.vd_point_estimate = self.tool.estimate_vd(irfs=self.tool.irf)
-        return self.rotation

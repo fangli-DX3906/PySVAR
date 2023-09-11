@@ -224,6 +224,14 @@ class PointIdentifiedSVAR(SVAR):
                          constant=constant,
                          info_criterion=info_criterion)
 
+    def identify(self):
+        self.rotation = self.solve()
+        self.tool.update(rotation=self.rotation)
+        self.tool.estimate_irf()
+        self.irf_point_estimate = self.tool.irf
+        self.vd_point_estimate = self.tool.estimate_vd(irfs=self.tool.irf)
+        return self.rotation
+
     def bootstrap(self,
                   n_path: int,
                   seed: Union[bool, int] = False) -> None:
