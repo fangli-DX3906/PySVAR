@@ -45,13 +45,13 @@ class Plotter:
                 ax = plt.subplot(n_rows, n_cols, j + 1)
                 var_id = self.var_names.index(var_list[j])
                 row = var_id + shock_id * self.n_vars
-                plt.plot(x_ticks, irf[row, :h + 1], color=color, linewidth=3)
+                plt.plot(x_ticks, irf[row, :], color=color, linewidth=3)
                 plt.axhline(y=0, color='black', linestyle='-', linewidth=3)
                 if with_ci:
                     for sig, alpha in zip(sigs, alpha_list[1:]):
                         plt.fill_between(x_ticks,
-                                         irf_cv[sig]['lower'][row, :h + 1],
-                                         irf_cv[sig]['upper'][row, :h + 1],
+                                         irf_cv[sig]['lower'][row, :],
+                                         irf_cv[sig]['upper'][row, :],
                                          alpha=alpha, edgecolor=color, facecolor=color, linewidth=0)
                 plt.xlim(0, h)
                 plt.xticks(list(range(0, h, 5)))

@@ -3,11 +3,10 @@ import random
 from typing import Union, Literal, List, Tuple, Optional
 import numpy as np
 
-from estimation.SVAR import SVAR
-from Tools import Tools
+from estimation.SVAR import SetIdentifiedSVAR
 
 
-class SignRestriction(SVAR):
+class SignRestriction(SetIdentifiedSVAR):
     def __init__(self,
                  data: np.ndarray,
                  var_names: list,
@@ -25,14 +24,9 @@ class SignRestriction(SVAR):
                          date_frequency=date_frequency,
                          date_start=date_start,
                          date_end=date_end,
-                         set_identified=True,
                          lag_order=lag_order,
                          constant=constant,
                          info_criterion=info_criterion)
-        self.tool = Tools(data=data,
-                          lag_order=self.lag_order,
-                          comp_mat=self.comp_mat,
-                          cov_mat=self.cov_mat)
         self.identification = 'sign restriction'
         self.target_signs = target_signs
         self.n_ones = np.sum(self.target_signs == 1)
@@ -62,7 +56,7 @@ class SignRestriction(SVAR):
         return Q
 
     def identify(self,
-                 h: int,
+                 # h: int,
                  n_rotation: int,
                  length_to_check: int = 1,
                  seed: Union[bool, int] = False,
@@ -73,14 +67,13 @@ class SignRestriction(SVAR):
 
         counter = 0
         total = 0
-        self.irf_mat = np.zeros((n_rotation, self.n_vars * self.n_shocks, h + 1))
-        self.vd_mat = np.zeros((n_rotation, self.n_vars * self.n_shocks, h + 1))
-        self.irf_max_full = np.zeros((n_rotation, self.n_vars * self.n_shocks, self.H + 1))
+        self.rotation_list = []
 
         while counter < n_rotation:
             total += 1
             D = self.draw_rotation()
             self.tool.update(rotation=D)
+            self.tool.estimate_irf(length=length_to_check)
             _irfs_ = self.tool.irf
             irf_sign = np.sign(np.sum(_irfs_[:, :length_to_check], axis=1).reshape((self.n_vars, self.n_vars)))
             idx, sorted_signs = self._sort_row(irf_sign)
@@ -91,14 +84,16 @@ class SignRestriction(SVAR):
                 if verbose:
                     print(f'{counter} accepted rotations/{n_rotation} required rotations')
                 D = D[:, idx]
-                self.tool.update(rotation=D)
-                irfr_full = self.tool.irf
-                self.irf_max_full[counter - 1, :, :] = irfr_full[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
-                irf_needed = irfr_full[:, :h + 1]
-                self.irf_mat[counter - 1, :, :] = irf_needed[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
-                vdr = self.tool.estimate_vd(irfs=irf_needed)
-                self.vd_mat[counter - 1, :, :] = vdr[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
+                self.rotation_list.append(D)
+                # self.tool.update(rotation=D)
+                # irfr_full = self.tool.irf
+                # self.irf_full_mat[counter - 1, :, :] = irfr_full[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
+                # # irf_needed = irfr_full[:, :h + 1]
+                # # self.irf_mat[counter - 1, :, :] = irf_needed[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
+                # vdr = self.tool.estimate_vd(irfs=irfr_full)
+                # self.vd_mat[counter - 1, :, :] = vdr[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :]
 
         # TODO: incorporate HD
         print('*' * 30)
         print(f'acceptance rate is {counter / total}')
+        self._calc_full_irf()

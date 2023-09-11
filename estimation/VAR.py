@@ -36,20 +36,19 @@ class VAR(BaseModel):
                           lag_order=self.lag_order,
                           comp_mat=self.comp_mat,
                           cov_mat=self.cov_mat,
-                          rotation=np.ones(self.n_vars))
+                          rotation=np.eye(self.n_vars))
         self.plotter = Plotter(var_names=var_names,
                                shock_names=self.shock_names,
                                date_frequency=date_frequency)
         self.H = self.n_obs - self.lag_order
 
     def irf(self, h: int) -> np.ndarray:
-        self.irf_point_estimate = self.tool._irfs_[:, :h + 1]
-        return self.irf_point_estimate
+        self.irf_point_estimate = self.tool._irfs_
+        return self.irf_point_estimate[:, :h + 1]
 
     def vd(self, h: int) -> np.ndarray:
-        irf_for_vd = self.tool._irfs_[:, :h + 1]
-        self.vd_point_estimate = self.tool.estimate_vd(irf_for_vd)
-        return self.vd_point_estimate
+        self.vd_point_estimate = self.tool.estimate_vd(self.tool._irfs_)
+        return self.vd_point_estimate[:, :h + 1]
 
     def bootstrap(self,
                   h: int,
@@ -59,33 +58,44 @@ class VAR(BaseModel):
             np.random.seed(seed)
             random.seed(seed)
 
-        self.irf_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
-        self.vd_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
+        # self.irf_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
+        # self.vd_mat = np.zeros((n_path, self.n_vars ** 2, h + 1))
         self.irf_mat_full = np.zeros((n_path, self.n_vars ** 2, self.H + 1))
+        self.vd_mat_full = np.zeros((n_path, self.n_vars ** 2, self.H + 1))
 
         for r in range(n_path):
             yr = self.make_bootstrap_sample()
             comp_mat_r, cov_mat_r, _, _, _ = self.estimate(yr, self.lag_order)
             cov_mat_r = cov_mat_r[:self.n_vars, :self.n_vars]
             self.tool.update(data=yr, comp=comp_mat_r, cov=cov_mat_r)
-            irfr = self.tool.irf
-            self.irf_mat_full[r, :, :] = irfr
-            temp_irfr = irfr[:, :h + 1]
-            self.irf_mat[r, :, :] = temp_irfr
-            vdr = self.tool.estimate_vd(temp_irfr)
-            self.vd_mat[r, :, :] = vdr
+            self.tool.estimate_irf()
+            self.irf_mat_full[r, :, :] = self.tool.irf
+            self.vd_mat_full[r, :, :] = self.tool.estimate_vd(self.tool.irf)
+            # irfr = self.tool.irf
+            # self.irf_mat_full[r, :, :] = irfr
+            # temp_irfr = irfr[:, :h + 1]
+            # self.irf_mat[r, :, :] = temp_irfr
+            # vdr = self.tool.estimate_vd(temp_irfr)
+            # self.vd_mat[r, :, :] = vdr
 
-    def irf_cv(self, sigs: Union[List[int], int]) -> None:
-        if 'irf_mat' not in self.__dir__():
+    def irf_cv(self,
+               h: int,
+               sigs: Union[List[int], int]) -> dict:
+        if 'irf_mat_full' not in self.__dir__():
             raise ValueError("bootstrap first")
-        self.irf_confid_intvl = self.tool.make_confid_intvl(mat=self.irf_mat, sigs=sigs)
+        self.irf_confid_intvl = self.tool.make_confid_intvl(mat=self.irf_mat_full[:, :h + 1], sigs=sigs)
+        return self.irf_confid_intvl
 
-    def vd_cv(self, sigs: Union[List[int], int]) -> None:
-        if 'vd_mat' not in self.__dir__():
+    def vd_cv(self,
+              h: int,
+              sigs: Union[List[int], int]) -> dict:
+        if 'vd_mat_full' not in self.__dir__():
             raise ValueError("bootstrap first")
-        self.vd_confid_intvl = self.tool.make_confid_intvl(mat=self.vd_mat, sigs=sigs)
+        self.vd_confid_intvl = self.tool.make_confid_intvl(mat=self.vd_mat_full[:, :h + 1], sigs=sigs)
+        return self.vd_confid_intvl
 
     def plot_irf(self,
+                 h: int,
                  var_list: Optional[List[str]] = None,
                  shock_list: Union[List[int]] = None,
                  sigs: Union[List[int], int] = None,
@@ -100,19 +110,11 @@ class VAR(BaseModel):
                 raise ValueError('Not specifying significance levels.')
             if not isinstance(sigs, list):
                 sigs = [sigs]
-            if 'irf_confid_intvl' not in self.__dir__():
-                self.irf_cv(sigs)
-
-        if self.irf_point_estimate.shape[1] != self.irf_mat.shape[2]:
-            print('Warning: length for point estimate and confidence interval are not consistent!')
-            H = min(self.irf_point_estimate.shape[1], self.irf_mat.shape[2])
+            cv_plot = self.irf_cv(h=h, sigs=sigs)
         else:
-            H = self.irf_point_estimate.shape[1]
-        # H contains the init period
-        irf_plot = self.irf_point_estimate[:, :H]
-        for sig in sigs:
-            for bound in ['lower', 'upper']:
-                self.irf_confid_intvl[sig][bound] = self.irf_confid_intvl[sig][bound][:, :H]
+            cv_plot = None
+
+        irf_plot = self.irf_point_estimate[:, :h + 1]
 
         if var_list is None:
             var_list = self.var_names
@@ -128,17 +130,18 @@ class VAR(BaseModel):
         else:
             pass
 
-        self.plotter.plot_irf(h=H,
+        self.plotter.plot_irf(h=h + 1,
                               var_list=var_list,
                               shock_list=shock_list,
                               sigs=sigs,
                               irf=irf_plot,
                               with_ci=with_ci,
                               max_cols=max_cols,
-                              irf_cv=self.irf_confid_intvl,
+                              irf_cv=cv_plot,
                               save_path=save_path)
 
     def plot_vd(self,
+                h: int,
                 var_list: Optional[List[str]] = None,
                 shock_list: Optional[List[int]] = None,
                 max_cols: int = 3,
@@ -160,8 +163,7 @@ class VAR(BaseModel):
         else:
             pass
 
-        H = self.vd_point_estimate.shape[1]
-        self.plotter.plot_vd(h=H,
+        self.plotter.plot_vd(h=h + 1,
                              var_list=var_list,
                              shock_list=shock_list,
                              vd=self.vd_point_estimate,

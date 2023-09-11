@@ -4,7 +4,7 @@ import datetime as dt
 from estimation.VAR import VAR
 
 # replicate Kilian (2009)
-oil = spio.loadmat('./data/oil.mat')
+oil = spio.loadmat('/Users/fangli/PySVAR/PySVAR/data/oil.mat')
 oil = oil['data']
 names = ['OilProd', 'REA', 'OilPrice']
 shocks = ['Supply', 'Agg Demand', 'Specific Demand']
@@ -22,11 +22,11 @@ exm.irf_point_estimate[6, :] = np.cumsum(exm.irf_point_estimate[6, :])
 exm.irf_point_estimate[1, :] = -exm.irf_point_estimate[1, :]
 exm.irf_point_estimate[2, :] = -exm.irf_point_estimate[2, :]
 
-for _ in range(exm.irf_mat.shape[0]):
-    exm.irf_mat[_, 0, :] = -np.cumsum(exm.irf_mat[_, 0, :])
-    exm.irf_mat[_, 3, :] = np.cumsum(exm.irf_mat[_, 3, :])
-    exm.irf_mat[_, 6, :] = np.cumsum(exm.irf_mat[_, 6, :])
-    exm.irf_mat[_, 1, :] = -exm.irf_mat[_, 1, :]
-    exm.irf_mat[_, 2, :] = -exm.irf_mat[_, 2, :]
+for _ in range(exm.irf_mat_full.shape[0]):
+    exm.irf_mat_full[_, 0, :] = -np.cumsum(exm.irf_mat_full[_, 0, :])
+    exm.irf_mat_full[_, 3, :] = np.cumsum(exm.irf_mat_full[_, 3, :])
+    exm.irf_mat_full[_, 6, :] = np.cumsum(exm.irf_mat_full[_, 6, :])
+    exm.irf_mat_full[_, 1, :] = -exm.irf_mat_full[_, 1, :]
+    exm.irf_mat_full[_, 2, :] = -exm.irf_mat_full[_, 2, :]
 
-exm.plot_irf(var_list=names, sigs=[68, 95], with_ci=True)
+exm.plot_irf(h=40, var_list=names, sigs=[68, 95], with_ci=True)

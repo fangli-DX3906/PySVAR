@@ -16,12 +16,13 @@ class Tools:
         self.rotation = rotation
         self.n_obs_, self.n_vars_ = self.data.shape
         self.rotation = rotation
-        if not rotation is None:
+        if rotation is not None:
             self.estimate_irf()
             # self._irfs_ is the point estimate for VAR, self.irf varies with each update
             self._irfs_ = self.irf
 
-    def estimate_irf(self) -> None:
+    def estimate_irf(self,
+                     length: Optional[int] = None) -> None:
         j = np.concatenate((np.eye(self.n_vars_), np.zeros((self.n_vars_, self.n_vars_ * (self.lag_order_ - 1)))),
                            axis=1)
         aa = np.eye(self.n_vars_ * self.lag_order_)
@@ -29,7 +30,11 @@ class Tools:
         chol = np.linalg.cholesky(self.cov_mat)
         irf = np.dot(np.dot(np.dot(np.dot(j, aa), j.T), chol), self.rotation)
         irf = irf.reshape((self.n_vars_ ** 2, -1), order='F')
-        for i in range(1, self.n_obs_ - self.lag_order_ + 1):
+        if length is not None:
+            H = length
+        else:
+            H = self.n_obs_ - self.lag_order_ + 1
+        for i in range(1, H):
             aa = np.dot(aa, self.comp_mat)
             temp = np.dot(np.dot(np.dot(np.dot(j, aa), j.T), chol), self.rotation)
             temp = temp.reshape((self.n_vars_ ** 2, -1), order='F')
@@ -84,4 +89,4 @@ class Tools:
             self.data = kwargs['data']
         if 'rotation' in to_be_updated:
             self.rotation = kwargs['rotation']
-        self.estimate_irf()
+        # self.estimate_irf()

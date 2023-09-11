@@ -5,9 +5,10 @@ import numpy as np
 
 from Base import BaseModel
 from Plotter import Plotter
+from Tools import Tools
 
 
-class SVAR(BaseModel):
+class SetIdentifiedSVAR(BaseModel):
     def __init__(self,
                  data: np.ndarray,
                  var_names: list,
@@ -15,7 +16,6 @@ class SVAR(BaseModel):
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
                  date_start: datetime.datetime,
                  date_end: datetime.datetime,
-                 set_identified: bool,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -37,12 +37,15 @@ class SVAR(BaseModel):
         self.plotter = Plotter(var_names=var_names,
                                shock_names=self.shock_names,
                                date_frequency=date_frequency)
-        self.set_identified = set_identified
+        self.tool = Tools(data=data,
+                          lag_order=self.lag_order,
+                          comp_mat=self.comp_mat,
+                          cov_mat=self.cov_mat)
 
     def get_structural_shocks(self,
-                              chol: Optional[np.ndarray] = None,
-                              rotation: Optional[np.ndarray] = None,
-                              resid: Optional[np.ndarray] = None) -> np.ndarray:
+                              chol: Union[np.ndarray, None],
+                              rotation: Union[np.ndarray, None],
+                              resid: Union[np.ndarray, None]) -> np.ndarray:
         if chol is None:
             chol = self.chol
         if rotation is None:
@@ -52,93 +55,71 @@ class SVAR(BaseModel):
         shocks = np.dot(np.linalg.inv(np.dot(chol, rotation)), resid[self.lag_order:, :].T)
         return shocks
 
-    def irf(self, h: int) -> np.ndarray:
-        return self.irf_point_estimate[:, h + 1]
+    def _calc_full_irf(self) -> None:
+        n_rotation = len(self.rotation_list)
+        self.irf_full_mat = np.zeros((n_rotation, self.n_vars ** 2, self.H + 1))
+        self.vd_full_mat = np.zeros((n_rotation, self.n_vars ** 2, self.H + 1))
+        counter = 1
+        for rotation in self.rotation_list:
+            self.tool.update(rotation=rotation)
+            self.tool.estimate_irf()
+            self.irf_full_mat[counter - 1, :, :] = self.tool.irf
+            self.vd_full_mat[counter - 1, :, :] = self.tool.estimate_vd(irfs=self.tool.irf)
+            counter += 1
 
-    def vd(self, h: int) -> np.ndarray:
-        return self.vd_point_estimate[:, h + 1]
+    def calc_confid_intvl(self,
+                          h: int,
+                          which: Literal['irf', 'vd'],
+                          sigs: Union[List[int], int]):
+        if which == 'irf':
+            mat = self.irf_full_mat[:, :(self.n_vars ** 2 - self.n_diff * self.n_vars), :h + 1]
+        else:
+            mat = self.vd_full_mat[:, :(self.n_vars ** 2 - self.n_diff * self.n_vars), :h + 1]
+        return self.tool.make_confid_intvl(mat=mat, sigs=sigs)
 
-    def irf_cv(self, sigs: Union[List[int], int]) -> None:
-        if 'irf_mat' not in self.__dir__():
-            raise ValueError("bootstrap first")
-        self.irf_confid_intvl = self.tool.make_confid_intvl(mat=self.irf_mat, sigs=sigs)
-        if self.set_identified:
-            self.irf_point_estimate = np.percentile(self.irf_mat, 50, axis=0)
+    def irf(self,
+            h: int,
+            how: Literal['median', 'average'] = 'median') -> np.ndarray:
+        if 'irf_full_mat' not in self.__dir__():
+            raise ValueError("Model is not identified.")
+        if how == 'median':
+            self.irf_point_estimate = np.percentile(self.irf_full_mat, 50, axis=0)
+        elif how == 'average':
+            self.irf_point_estimate = np.sum(self.irf_full_mat, axis=0) / self.irf_full_mat.shape[0]
+        return self.irf_point_estimate[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :h + 1]
 
-    def vd_cv(self, sigs: Union[List[int], int]) -> None:
-        if 'vd_mat' not in self.__dir__():
-            raise ValueError("bootstrap first")
-        self.vd_confid_intvl = self.tool.make_confid_intvl(mat=self.vd_mat, sigs=sigs)
-        if self.set_identified:
-            self.vd_point_estimate = np.percentile(self.vd_mat, 50, axis=0)
-
-    # TODO: check this
-    # def __get_hd(self,
-    #              shocks: np.ndarray,
-    #              irfs: np.ndarray) -> np.ndarray:
-    #     hd = np.zeros((self.n_vars, self.n_obs - self.lag_order, self.n_vars))
-    #     for iperiod in range(self.n_obs - self.lag_order):
-    #         for ishock in range(self.n_vars):
-    #             for ivar in range(self.n_vars):
-    #                 shocks_ = shocks[ishock, :iperiod]
-    #                 hd[ivar, iperiod, ishock] = np.dot(irfs[ivar + ishock * self.n_vars, :iperiod], shocks_[::-1])
-    #                 hd = hd.swapaxes(0, 2)
-    #     return hd
-
-    # TODO: check the logic
-    # def hd(self,
-    #        start: Optional[datetime.datetime] = None,
-    #        end: Optional[datetime.datetime] = None) -> np.ndarray:
-    #     if end <= start:
-    #         raise ValueError('Invalid date!')
-    #     if start < self.date_start:
-    #         raise ValueError('Invalid date!')
-    #     else:
-    #         temp_idx = list(self.date_time_span).index(start)
-    #         start_idx = temp_idx if temp_idx >= self.lag_order else temp_idx - self.lag_order
-    #     if end > self.date_end:
-    #         end_idx = -1
-    #     else:
-    #         end_idx = list(self.date_time_span).index(end)
-    #     return self.hd_point_estimate[:, start_idx:end_idx + 1]
-
-    # TODO: check the logic
-    # def hd_cv(self,
-    #           hd_sig: Union[List[int], int]) -> None:
-    #     if 'vd_mat' not in self.__dir__():
-    #         raise ValueError("bootstrap first")
-    #     self.vd_confid_intvl = self._ReducedModel__make_confid_intvl(mat=self.hd_mat, sigs=hd_sig)
-    #     if self.median_as_point_estimate:
-    #         self.vd_point_estimate = np.percentile(self.hd_mat, 50, axis=0)
+    def vd(self,
+           h: int,
+           how: Literal['median', 'average'] = 'median') -> np.ndarray:
+        if 'vd_full_mat' not in self.__dir__():
+            raise ValueError("Model is not identified.")
+        if how == 'median':
+            self.vd_point_estimate = np.percentile(self.vd_full_mat, 50, axis=0)
+        elif how == 'average':
+            self.vd_point_estimate = np.sum(self.vd_full_mat, axis=0) / self.vd_full_mat.shape[0]
+        return self.vd_point_estimate[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :h + 1]
 
     def plot_irf(self,
-                 var_list: Optional[List[str]] = None,
-                 shock_list: Union[List[int]] = None,
+                 h: int,
                  sigs: Union[List[int], int] = None,
+                 var_list: Optional[List[str]] = None,
+                 shock_list: Optional[List[str]] = None,
                  max_cols: int = 3,
-                 with_ci: bool = True,
+                 with_cv: bool = True,
                  save_path: Optional[str] = None) -> None:
         if 'irf_point_estimate' not in self.__dir__():
             raise ValueError("IRFs should be estimated.")
 
-        if with_ci:
+        if with_cv:
             if sigs is None:
                 raise ValueError('Not specifying significance levels.')
             if not isinstance(sigs, list):
                 sigs = [sigs]
-            if 'irf_confid_intvl' not in self.__dir__():
-                self.irf_cv(sigs)
-
-        if self.irf_point_estimate.shape[1] != self.irf_mat.shape[2]:
-            print('Warning: length for point estimate and confidence interval are not consistent!')
-            H = min(self.irf_point_estimate.shape[1], self.irf_mat.shape[2])
+            cv_plot = self.calc_confid_intvl(h=h, which='irf', sigs=sigs)
         else:
-            H = self.irf_point_estimate.shape[1]
-        # H contains the init period
-        irf_plot = self.irf_point_estimate[:, :H]
-        for sig in sigs:
-            for bound in ['lower', 'upper']:
-                self.irf_confid_intvl[sig][bound] = self.irf_confid_intvl[sig][bound][:, :H]
+            cv_plot = None
+
+        irf_plot = self.irf_point_estimate[:, :h + 1]
 
         if var_list is None:
             var_list = self.var_names
@@ -149,22 +130,23 @@ class SVAR(BaseModel):
 
         if shock_list is None:
             shock_list = self.shock_names
-        elif not set(shock_list).issubset(set(range(self.n_vars))):
+        elif not set(shock_list).issubset(set(self.shock_names)):
             raise ValueError('Check the shock names!')
         else:
             pass
 
-        self.plotter.plot_irf(h=H,
+        self.plotter.plot_irf(h=h + 1,
                               var_list=var_list,
                               shock_list=shock_list,
                               sigs=sigs,
                               irf=irf_plot,
-                              with_ci=with_ci,
+                              with_ci=True,
                               max_cols=max_cols,
-                              irf_cv=self.irf_confid_intvl,
+                              irf_cv=cv_plot,
                               save_path=save_path)
 
     def plot_vd(self,
+                h: int,
                 var_list: Optional[List[str]] = None,
                 shock_list: Optional[List[int]] = None,
                 max_cols: int = 3,
@@ -186,11 +168,10 @@ class SVAR(BaseModel):
         else:
             pass
 
-        H = self.vd_point_estimate.shape[1]
-        self.plotter.plot_vd(h=H,
+        self.plotter.plot_vd(h=h + 1,
                              var_list=var_list,
                              shock_list=shock_list,
-                             vd=self.vd_point_estimate,
+                             vd=self.vd_point_estimate[:h + 1],
                              max_cols=max_cols,
                              save_path=save_path)
 
