@@ -13,8 +13,8 @@ class VAR(BaseModel):
                  data: np.ndarray,
                  var_names: list,
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: datetime.datetime,
-                 date_end: datetime.datetime,
+                 date_start: Optional[datetime.datetime] = None,
+                 date_end: Optional[datetime.datetime] = None,
                  lag_order: Optional[int] = None,
                  shock_names: Optional[List[str]] = None,
                  constant: bool = True,
@@ -31,24 +31,26 @@ class VAR(BaseModel):
             self.shock_names = shock_names
         else:
             self.shock_names = [f'shock{_ + 1}' for _ in range(self.n_vars)]
-        self.fit()
-        self.tool = Tools(data=data,
-                          lag_order=self.lag_order,
-                          comp_mat=self.comp_mat,
-                          cov_mat=self.cov_mat,
-                          rotation=np.eye(self.n_vars))
         self.plotter = Plotter(var_names=var_names,
                                shock_names=self.shock_names,
                                date_frequency=date_frequency)
         self.H = self.n_obs - self.lag_order
 
+    def solve(self):
+        self.fit()
+        self.tool = Tools(data=self.data,
+                          lag_order=self.lag_order,
+                          comp_mat=self.comp_mat,
+                          cov_mat=self.cov_mat,
+                          rotation=np.eye(self.n_vars))
+        self.irf_point_estimate = self.tool._irfs_
+        self.vd_point_estimate = self.tool.estimate_vd(self.tool._irfs_)
+
     def irf(self, h: int) -> np.ndarray:
         # irf_point_estimate keeps track of the longest possible IRF, so does vd_point_estimate
-        self.irf_point_estimate = self.tool._irfs_
         return self.irf_point_estimate[:, :h + 1]
 
     def vd(self, h: int) -> np.ndarray:
-        self.vd_point_estimate = self.tool.estimate_vd(self.tool._irfs_)
         return self.vd_point_estimate[:, :h + 1]
 
     def bootstrap(self,

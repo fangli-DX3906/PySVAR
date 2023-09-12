@@ -14,8 +14,8 @@ class SVAR(BaseModel):
                  var_names: list,
                  shock_names: list,
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: datetime.datetime,
-                 date_end: datetime.datetime,
+                 date_start: Optional[datetime.datetime],
+                 date_end: Optional[datetime.datetime],
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -30,7 +30,6 @@ class SVAR(BaseModel):
         self.shock_names = shock_names
         self.H = self.n_obs - self.lag_order
         self.n_shocks = len(shock_names)
-        self.n_diff = self.n_vars - self.n_shocks
         self.fit()
         self.chol = np.linalg.cholesky(self.cov_mat)
         self.plotter = Plotter(var_names=var_names,
@@ -60,12 +59,12 @@ class SVAR(BaseModel):
                  var_list: Optional[List[str]] = None,
                  shock_list: Optional[List[str]] = None,
                  max_cols: int = 3,
-                 with_cv: bool = True,
+                 with_ci: bool = True,
                  save_path: Optional[str] = None) -> None:
         if 'irf_point_estimate' not in self.__dir__():
             raise ValueError("IRFs should be estimated.")
 
-        if with_cv:
+        if with_ci:
             if sigs is None:
                 raise ValueError('Not specifying significance levels.')
             if not isinstance(sigs, list):
@@ -95,7 +94,7 @@ class SVAR(BaseModel):
                               shock_list=shock_list,
                               sigs=sigs,
                               irf=irf_plot,
-                              with_ci=True,
+                              with_ci=with_ci,
                               max_cols=max_cols,
                               irf_cv=cv_plot,
                               save_path=save_path)
@@ -124,7 +123,6 @@ class SVAR(BaseModel):
             pass
 
         vd_plot = self.vd_point_estimate[:, :h + 1]
-
         self.plotter.plot_vd(h=h + 1,
                              var_list=var_list,
                              shock_list=shock_list,
@@ -143,7 +141,7 @@ class SVAR(BaseModel):
         else:
             if 'vd_mat_full' not in self.__dir__():
                 raise ValueError("bootstrap first")
-            mat = self.irf_mat_full[:, :self.n_shocks * self.n_vars, :h + 1]
+            mat = self.vd_mat_full[:, :self.n_shocks * self.n_vars, :h + 1]
         return self.tool.make_confid_intvl(mat=mat, sigs=sigs)
 
 
@@ -153,8 +151,8 @@ class SetIdentifiedSVAR(SVAR):
                  var_names: list,
                  shock_names: list,
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: datetime.datetime,
-                 date_end: datetime.datetime,
+                 date_start: Optional[datetime.datetime],
+                 date_end: Optional[datetime.datetime],
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -189,7 +187,7 @@ class SetIdentifiedSVAR(SVAR):
             self.irf_point_estimate = np.percentile(self.irf_mat_full, 50, axis=0)
         elif how == 'average':
             self.irf_point_estimate = np.sum(self.irf_mat_full, axis=0) / self.irf_mat_full.shape[0]
-        return self.irf_point_estimate[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :h + 1]
+        return self.irf_point_estimate[:self.n_shocks * self.n_vars, :h + 1]
 
     def vd(self,
            h: int,
@@ -200,7 +198,7 @@ class SetIdentifiedSVAR(SVAR):
             self.vd_point_estimate = np.percentile(self.vd_mat_full, 50, axis=0)
         elif how == 'average':
             self.vd_point_estimate = np.sum(self.vd_mat_full, axis=0) / self.vd_mat_full.shape[0]
-        return self.vd_point_estimate[:(self.n_vars ** 2 - self.n_diff * self.n_vars), :h + 1]
+        return self.vd_point_estimate[:self.n_shocks * self.n_vars, :h + 1]
 
 
 class PointIdentifiedSVAR(SVAR):
@@ -209,8 +207,8 @@ class PointIdentifiedSVAR(SVAR):
                  var_names: list,
                  shock_names: list,
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: datetime.datetime,
-                 date_end: datetime.datetime,
+                 date_start: Optional[datetime.datetime],
+                 date_end: Optional[datetime.datetime],
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -233,7 +231,7 @@ class PointIdentifiedSVAR(SVAR):
         return self.rotation
 
     def bootstrap(self,
-                  n_path: int,
+                  n_path: int = 100,
                   seed: Union[bool, int] = False) -> None:
         if seed:
             np.random.seed(seed)

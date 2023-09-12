@@ -12,27 +12,32 @@ class BaseModel(Estimation):
                  data: np.ndarray,
                  var_names: list,
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: datetime.datetime,
-                 date_end: datetime.datetime,
+                 date_start: Optional[datetime.datetime],
+                 date_end: Optional[datetime.datetime],
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
         super().__init__(data, constant)
         self.n_obs, self.n_vars = self.data.shape
         self.var_names = var_names
+        self.date_frequency = date_frequency
+        self.identity = np.eye(self.n_vars)
+        self.constant = constant
+        self.criterion = info_criterion
         if self.n_vars != len(self.var_names):
             raise ValueError('Names are not consistent with data dimension!')
-        self.date_start = date_start
-        self.date_end = date_end
-        self.date_time_span = list(date_range(start=date_start, end=date_end, freq=date_frequency).to_pydatetime())
-        self.date_frequency = date_frequency
+        if date_start is not None and date_end is not None:
+            self.date_start = date_start
+            self.date_end = date_end
+            self.date_time_span = list(date_range(start=date_start, end=date_end, freq=date_frequency).to_pydatetime())
+        else:
+            self.date_start = 1
+            self.date_end = self.n_obs
+            self.date_time_span = list(range(self.date_start, self.date_end + 1))
         if lag_order:
             self.lag_order = lag_order
         else:
             self.lag_order = self.optim_lag(y=self.data, criterion=info_criterion)
-        self.identity = np.eye(self.n_vars)
-        self.constant = constant
-        self.criterion = info_criterion
 
     def fit(self) -> None:
         self.comp_mat, self.cov, self.res, self.interp, self.x = self.estimate(self.data, self.lag_order)

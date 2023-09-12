@@ -13,8 +13,8 @@ class SignRestriction(SetIdentifiedSVAR):
                  shock_names: list,
                  target_signs: np.ndarray,
                  date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: datetime.datetime,
-                 date_end: datetime.datetime,
+                 date_start: Optional[datetime.datetime] = None,
+                 date_end: Optional[datetime.datetime] = None,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
