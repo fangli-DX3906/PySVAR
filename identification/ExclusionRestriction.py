@@ -33,23 +33,18 @@ class ExclusionRestriction(PointIdentifiedSVAR):
         self.n_restrictions = len(exclusion)
         if self.n_restrictions != self.n_vars * (self.n_vars - 1) / 2:
             raise ValueError('The model is not exactly identified!')
-        all_list = {(i, j) for i in range(self.n_vars) for j in range(self.n_vars)}
-        self.unrestricted = all_list.difference(self.exclusions)
+        self.all_list = {(i, j) for i in range(self.n_vars) for j in range(self.n_vars)}
 
-    def assign_non_zero_elements(self, unknown: np.ndarray) -> np.ndarray:
-        target_rotation = np.zeros((self.n_vars, self.n_vars))
-        for idx, item in enumerate(self.unrestricted):
-            target_rotation[item] = unknown[idx]
-        return target_rotation
-
-    def make_target_function(self,
-                             x: np.ndarray,
-                             cov_mat: np.ndarray):
-        B_mat = self.assign_non_zero_elements(x)
-        rotation = np.linalg.inv(B_mat)
-        # func = np.dot(rotation, rotation.T) - cov_mat
-        func = np.dot(np.dot(rotation.T, cov_mat), rotation)-np.eye(self.n_vars)
-        return np.sum(func ** 2)
+    def target_function(self,
+                        A: np.ndarray,
+                        cov_mat: np.ndarray):
+        A = A.reshape((self.n_vars, -1))
+        func = np.dot(A, A.T) - cov_mat
+        func_sum = 0
+        for idx in self.exclusions:
+            func_sum += A[idx[0], idx[1]] ** 2
+        func = np.sum(func ** 2) + func_sum
+        return func
 
     def solve(self,
               tol: Optional[float] = 1e-7,
@@ -57,7 +52,7 @@ class ExclusionRestriction(PointIdentifiedSVAR):
               cov_mat: Optional[np.ndarray] = None) -> np.ndarray:
         if cov_mat is None:
             cov_mat = self.cov_mat
-        target_func = lambda gamma: self.make_target_function(gamma, cov_mat=cov_mat)
-        sol = spo.minimize(fun=target_func, x0=np.ones(len(self.unrestricted)), tol=tol)
-        rotation = np.linalg.inv(self.assign_non_zero_elements(sol.x))
+        target_func = lambda A: self.target_function(A, cov_mat=cov_mat)
+        sol = spo.minimize(fun=target_func, x0=np.eye(self.n_vars), tol=tol)
+        rotation = sol.x.reshape((self.n_vars, -1))
         return rotation
