@@ -2,23 +2,17 @@ import scipy.io as spio
 import numpy as np
 from ExclusionRestriction import ExclusionRestriction
 from RecursiveIdentification import RecursiveIdentification
-from VAR import VAR
 
 # replilcate Kilian 2009
-oil = spio.loadmat('/Users/fangli/PySVAR/PySVAR/data/oil.mat')
-oil = oil['data']
-names = ['OilProd', 'REA', 'OilPrice']
-shocks = ['Supply', 'Agg Demand', 'Specific Demand']
-exclusion = {(0, 1), (0, 2), (1, 2)}
+oil = spio.loadmat('data/oil.mat')
+o = oil['data']
+n = ['OilProd', 'REA', 'OilPrice']
+s = ['Supply', 'Agg Demand', 'Specific Demand']
+e = {(0, 1), (0, 2), (1, 2)}
 h = 15
 
-varm = VAR(data=oil, var_names=names, date_frequency='M', lag_order=24)
-exln = ExclusionRestriction(data=oil, var_names=names, shock_names=shocks, exclusion=exclusion, date_frequency='M',
-                            lag_order=24)
-recr = RecursiveIdentification(data=oil, var_names=names, shock_names=shocks, date_frequency='M', lag_order=24)
-
-varm.solve()
-varm.bootstrap(seed=3906)
+exln = ExclusionRestriction(data=o, var_names=n, shock_names=s, exclusion=e, date_frequency='M', lag_order=24)
+recr = RecursiveIdentification(data=o, var_names=n, shock_names=s, date_frequency='M', lag_order=24)
 
 exln.identify()
 exln.bootstrap(seed=3906)
@@ -26,7 +20,7 @@ exln.bootstrap(seed=3906)
 recr.identify()
 recr.bootstrap(seed=3906)
 
-mdls = [varm, exln, recr]
+mdls = [exln, recr]
 for m in mdls:
     m.irf_point_estimate[0, :] = -np.cumsum(m.irf_point_estimate[0, :])
     m.irf_point_estimate[3, :] = np.cumsum(m.irf_point_estimate[3, :])
@@ -39,4 +33,4 @@ for m in mdls:
         m.irf_mat_full[_, 6, :] = np.cumsum(m.irf_mat_full[_, 6, :])
         m.irf_mat_full[_, 1, :] = -m.irf_mat_full[_, 1, :]
         m.irf_mat_full[_, 2, :] = -m.irf_mat_full[_, 2, :]
-    m.plot_irf(h=15, var_list=names, sigs=95, with_ci=True)
+    m.plot_irf(h=15, var_list=n, sigs=95, with_ci=True)

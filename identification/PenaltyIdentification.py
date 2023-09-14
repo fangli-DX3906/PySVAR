@@ -7,6 +7,7 @@ import datetime
 from estimation.SVAR import PointIdentifiedSVAR
 
 
+# TODO: check
 class PenaltyIdentification(PointIdentifiedSVAR):
     def __init__(self,
                  data: np.ndarray,

@@ -4,7 +4,7 @@ import datetime as dt
 from estimation.VAR import VAR
 
 # replicate Kilian (2009)
-oil = spio.loadmat('/Users/fangli/PySVAR/PySVAR/data/oil.mat')
+oil = spio.loadmat('data/oil.mat')
 oil = oil['data']
 names = ['OilProd', 'REA', 'OilPrice']
 shocks = ['Supply', 'Agg Demand', 'Specific Demand']

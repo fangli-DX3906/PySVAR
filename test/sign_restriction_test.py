@@ -6,7 +6,7 @@ from time import perf_counter
 from SignRestriction import SignRestriction
 
 # replicate Marco Brianti (2023)
-data = spio.loadmat('/Users/fangli/PySVAR/PySVAR/data/sign_res.mat')
+data = spio.loadmat('data/sign_res.mat')
 data = data['y']
 names = ['Output', 'TFP', 'Investment', 'StockReturn', 'Cash', 'CreditSpread', 'Uncertainty', 'Inflation']
 shocks = ['Supply', 'Financial', 'Uncertainty', 'Residual']

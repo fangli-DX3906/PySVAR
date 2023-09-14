@@ -6,7 +6,7 @@ import datetime
 
 from estimation.SVAR import PointIdentifiedSVAR
 
-
+# TODO: check
 class OptimBasedIdentification(PointIdentifiedSVAR):
     def __init__(self,
                  data: np.ndarray,
