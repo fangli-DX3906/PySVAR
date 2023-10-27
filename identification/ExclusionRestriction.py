@@ -47,12 +47,11 @@ class ExclusionRestriction(PointIdentifiedSVAR):
         return func
 
     def solve(self,
-              tol: Optional[float] = 1e-7,
               comp_mat: Optional[np.ndarray] = None,
               cov_mat: Optional[np.ndarray] = None) -> np.ndarray:
         if cov_mat is None:
             cov_mat = self.cov_mat
         target_func = lambda A: self.target_function(A, cov_mat=cov_mat)
-        sol = spo.minimize(fun=target_func, x0=np.eye(self.n_vars), tol=tol)
+        sol = spo.minimize(fun=target_func, x0=np.eye(self.n_vars))
         rotation = sol.x.reshape((self.n_vars, -1))
         return rotation
