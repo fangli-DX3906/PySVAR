@@ -2,6 +2,7 @@ import datetime
 import random
 from typing import Literal, Tuple, Optional
 import numpy as np
+import multiprocessing
 
 from estimation.SVAR import SetIdentifiedSVAR
 
@@ -55,21 +56,12 @@ class SignRestriction(SetIdentifiedSVAR):
         Q = np.sign(np.diag(R)).reshape((-1, 1)) * Q
         return Q
 
-    def identify(self,
-                 n_rotation: int,
-                 length_to_check: int = 1,
-                 seed: Optional[int] = None,
-                 verbose: bool = False) -> None:
-        if seed is not None:
-            np.random.seed(seed)
-            random.seed(seed)
-
-        counter = 0
-        total = 0
-        self.rotation_list = []
-
-        while counter < n_rotation:
-            total += 1
+    def _pcheck_sign(self,
+                     queue,
+                     n_rotation_per_process: int,
+                     length_to_check: int = 1):
+        results = []
+        while len(results) < n_rotation_per_process:
             D = self.draw_rotation()
             self.tool.update(rotation=D)
             self.tool.estimate_irf(length=length_to_check)
@@ -78,12 +70,62 @@ class SignRestriction(SetIdentifiedSVAR):
             idx, sorted_signs = self._sort_row(irf_sign)
             diff_sign = self.target_signs - sorted_signs
             if np.sum(diff_sign ** 2) == self.num_unrestricted:
-                counter += 1
-                if verbose:
-                    print(f'{counter} accepted rotations/{n_rotation} required rotations')
                 D = D[:, idx]
-                self.rotation_list.append(D)
+                results.append(D)
+        queue.put(results)
 
-        print('*' * 30)
-        print(f'acceptance rate: {round(counter / total, 4) * 100}%')
+    def _check_sign(self,
+                    n_rotation: int,
+                    length_to_check: int = 1,
+                    verbose: bool = False):
+        rotation_list = []
+        while len(rotation_list) < n_rotation:
+            D = self.draw_rotation()
+            self.tool.update(rotation=D)
+            self.tool.estimate_irf(length=length_to_check)
+            _irfs_ = self.tool.irf
+            irf_sign = np.sign(np.sum(_irfs_, axis=1).reshape((self.n_vars, self.n_vars)))
+            idx, sorted_signs = self._sort_row(irf_sign)
+            diff_sign = self.target_signs - sorted_signs
+            if np.sum(diff_sign ** 2) == self.num_unrestricted:
+                D = D[:, idx]
+                rotation_list.append(D)
+                if verbose:
+                    print(f'{len(rotation_list)} accepted rotations/{n_rotation} required rotations')
+        return rotation_list
+
+    def identify(self,
+                 n_rotation: int,
+                 parallel: bool,
+                 n_process: int = 4,
+                 length_to_check: int = 1,
+                 seed: Optional[int] = None,
+                 verbose: bool = False) -> None:
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+
+        if parallel:
+            n_rotation_per_process = n_rotation // n_process + 1
+            rotation_queue = multiprocessing.Queue()
+            processes_list = []
+            n_worker = 0
+            for _ in range(n_process):
+                n_worker += 1
+                p = multiprocessing.Process(target=self._pcheck_sign,
+                                            args=(rotation_queue, n_rotation_per_process, length_to_check))
+                processes_list.append(p)
+                p.start()
+
+            rotation_list = []
+            for _ in range(n_process):
+                rotation_list.extend(rotation_queue.get())
+
+            for p in processes_list:
+                p.join()
+
+            self.rotation_list = rotation_list[:n_rotation]
+        else:
+            self.rotation_list = self._check_sign(n_rotation, length_to_check, verbose)
+
         self.full_irf()
