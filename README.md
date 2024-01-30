@@ -2,6 +2,8 @@
 
 This is a mini package (or just call it a bag-of-codes) designed for SVAR estimation across multiple identification schemes. I named it PySVAR, just trying to keep up with the Python package naming trend. It’s super straightforward—there will be virtually no learning curve if you're familiar with Sklearn. Simply input the parameters, and all set! 
 
+
+
 ### Usage
 We begin with one of the simplest possible identification method: the Cholesky identification, used by Kilian in the 2009 AER paper. Assuming $e_t=A_0^{−1}\epsilon_t$, where $e_t$ represents the reduced form errors and $\epsilon_t$ denotes the structural shocks and $A_0^{-1}$ is defined as
 
@@ -56,15 +58,26 @@ where the point estimate and confidence interval are stored in `irf_point_estima
 ![agg_demand](graphs/agg_demand.png)
 ![spe_demand](graphs/spe_demand.png)
 
+
+
 ### Version
+
 The current beta version now includes sign restriction, recursive identification, and exclusion identification. I will continue to update the package
 
-The next version will include optimization-based identification and identification through heteroscedasticity. It will also incorporate historical decomposition.
+The future versions will include:
 
-Future Plan: Integrate the Bayesian method.
+* optimization-based identifications and identification through heteroscedasticity. 
+* historical decomposition and various visualizations.
+* Bayesian method.
+
+<u>Jan 2024 update</u>: Support for parallel computing has been implemented for sign restrictions, resulting in a 50% speed increase.
+
+
 
 ### Disclaimer
 This is a beta version. The code has not undergone extensive testing as of yet. While I hope it proves useful, I provide absolutely no guarantees, either expressed or implied, regarding its functionality or suitability for your needs.
+
+
 
 ### Thanks
 I wish to extend my deepest thanks to my advisor, Dr. Marco Brianti, for introducing me to this field and for providing generous guidance on the SVAR model's identification and estimation techniques.

@@ -80,9 +80,9 @@ class SignRestriction(SetIdentifiedSVAR):
                     counter.value += 1
         queue.put(results)
 
-    def _check_sign(self,
-                    n_rotation: int,
-                    length_to_check: int = 1):
+    def _check_sign_wo_parallel(self,
+                                n_rotation: int,
+                                length_to_check: int = 1):
         rotation_list = []
         pbar = tqdm(total=n_rotation, desc=f'Drawing {n_rotation} rotations...')
         while len(rotation_list) < n_rotation:
@@ -142,6 +142,6 @@ class SignRestriction(SetIdentifiedSVAR):
 
             self.rotation_list = rotation_list[:n_rotation]
         else:
-            self.rotation_list = self._check_sign(n_rotation, length_to_check)
+            self.rotation_list = self._check_sign_wo_parallel(n_rotation, length_to_check)
 
         self.full_irf()
