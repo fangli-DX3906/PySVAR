@@ -3,6 +3,8 @@ import random
 from typing import Literal, Tuple, Optional
 import numpy as np
 import multiprocessing
+from multiprocessing import Lock, Value
+from tqdm import tqdm
 
 from estimation.SVAR import SetIdentifiedSVAR
 
@@ -56,10 +58,12 @@ class SignRestriction(SetIdentifiedSVAR):
         Q = np.sign(np.diag(R)).reshape((-1, 1)) * Q
         return Q
 
-    def _pcheck_sign(self,
-                     queue,
-                     n_rotation_per_process: int,
-                     length_to_check: int = 1):
+    def _check_sign_parallel(self,
+                             queue: multiprocessing.Queue,
+                             counter: multiprocessing.Value,
+                             lock: multiprocessing.Lock,
+                             n_rotation_per_process: int,
+                             length_to_check: int = 1):
         results = []
         while len(results) < n_rotation_per_process:
             D = self.draw_rotation()
@@ -72,13 +76,15 @@ class SignRestriction(SetIdentifiedSVAR):
             if np.sum(diff_sign ** 2) == self.num_unrestricted:
                 D = D[:, idx]
                 results.append(D)
+                with lock:
+                    counter.value += 1
         queue.put(results)
 
     def _check_sign(self,
                     n_rotation: int,
-                    length_to_check: int = 1,
-                    verbose: bool = False):
+                    length_to_check: int = 1):
         rotation_list = []
+        pbar = tqdm(total=n_rotation, desc=f'Drawing {n_rotation} rotations...')
         while len(rotation_list) < n_rotation:
             D = self.draw_rotation()
             self.tool.update(rotation=D)
@@ -90,32 +96,42 @@ class SignRestriction(SetIdentifiedSVAR):
             if np.sum(diff_sign ** 2) == self.num_unrestricted:
                 D = D[:, idx]
                 rotation_list.append(D)
-                if verbose:
-                    print(f'{len(rotation_list)} accepted rotations/{n_rotation} required rotations')
+                pbar.update(1)
         return rotation_list
 
     def identify(self,
                  n_rotation: int,
-                 parallel: bool,
+                 parallel: bool = False,
                  n_process: int = 4,
                  length_to_check: int = 1,
-                 seed: Optional[int] = None,
-                 verbose: bool = False) -> None:
+                 seed: Optional[int] = None) -> None:
         if seed is not None:
             np.random.seed(seed)
             random.seed(seed)
 
         if parallel:
-            n_rotation_per_process = n_rotation // n_process + 1
+            n_rotation_each = n_rotation // n_process
+            n_rotation_li = [n_rotation_each for _ in range(n_process)[:-1]]
+            n_rotation_li.append(n_rotation - (n_process - 1) * n_rotation_each)
             rotation_queue = multiprocessing.Queue()
+            progress_counter = Value('i', 0)
+            lock = Lock()
+
             processes_list = []
-            n_worker = 0
-            for _ in range(n_process):
-                n_worker += 1
-                p = multiprocessing.Process(target=self._pcheck_sign,
-                                            args=(rotation_queue, n_rotation_per_process, length_to_check))
+            for _, n_rotation_this_process in zip(range(n_process), n_rotation_li):
+                p = multiprocessing.Process(target=self._check_sign_parallel,
+                                            args=(rotation_queue, progress_counter, lock,
+                                                  n_rotation_this_process, length_to_check))
                 processes_list.append(p)
                 p.start()
+
+            pbar = tqdm(total=n_rotation, desc=f'Drawing {n_rotation} rotations...')
+            while True:
+                with lock:
+                    current_progress = progress_counter.value
+                pbar.update(current_progress - pbar.n)
+                if current_progress >= n_rotation:
+                    break
 
             rotation_list = []
             for _ in range(n_process):
@@ -126,6 +142,6 @@ class SignRestriction(SetIdentifiedSVAR):
 
             self.rotation_list = rotation_list[:n_rotation]
         else:
-            self.rotation_list = self._check_sign(n_rotation, length_to_check, verbose)
+            self.rotation_list = self._check_sign(n_rotation, length_to_check)
 
         self.full_irf()

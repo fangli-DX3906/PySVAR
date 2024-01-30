@@ -30,7 +30,7 @@ if __name__ == '__main__':
                           date_end=dt.datetime(2020, 3, 31),
                           date_frequency='Q')
     t0 = perf_counter()
-    fsr.identify(n_rotation=200, parallel=True, seed=3906, verbose=True)
+    fsr.identify(n_rotation=200, parallel=True, seed=3906)
     t1 = perf_counter()
     print(f'running time: {t1 - t0} seconds')
     _ = fsr.irf(h=40)
