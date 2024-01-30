@@ -166,7 +166,7 @@ class SetIdentifiedSVAR(SVAR):
                          constant=constant,
                          info_criterion=info_criterion)
 
-    def full_irf(self) -> None:
+    def _full_irf(self) -> None:
         n_rotation = len(self.rotation_list)
         self.irf_mat_full = np.zeros((n_rotation, self.n_vars ** 2, self.H + 1))
         self.vd_mat_full = np.zeros((n_rotation, self.n_vars ** 2, self.H + 1))

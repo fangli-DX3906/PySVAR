@@ -144,4 +144,4 @@ class SignRestriction(SetIdentifiedSVAR):
         else:
             self.rotation_list = self._check_sign_wo_parallel(n_rotation, length_to_check)
 
-        self.full_irf()
+        self._full_irf()
