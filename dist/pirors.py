@@ -106,3 +106,6 @@ def register_class(cls):
 register_class(DiffusePrior)
 register_class(MinnesotaPrior)
 register_class(SteadyStatePrior)
+
+# which to import
+__all__ = ['DiffusePrior', 'MinnesotaPrior', 'SteadyStatePrior', 'class_factory']

@@ -40,6 +40,9 @@ class MultiNormalDist(Distribution):
         return A
 
 
+# which to import
+__all__ = ['InverseWhishartDist', 'MultiNormalDist']
+
 if __name__ == '__main__':
     a = InverseWhishartDist(np.array([[1, 2], [3, 4]]), np.array([1, 2]))
     print(a)
