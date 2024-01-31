@@ -38,11 +38,7 @@ if __name__ == '__main__':
                                   prior='Diffuse',
                                   date_frequency='Q')
     t2 = perf_counter()
-    bsr.simulate(n_burn=1000, n_sims=100, n_rotation=2, seed=3906)  # bayesian method
+    bsr.identify(n_burn=1000, n_sims=100, n_rotation=2, seed=3906)  # bayesian method
     t3 = perf_counter()
     _ = bsr.irf(h=40)
     bsr.plot_irf(h=40, var_list=var_plot, shock_list=shock_plot, sigs=[68, 95])
-
-    t4 = perf_counter()
-    bsr.identify(n_rotation=200, parallel=True, seed=3906)  # non bayesian method
-    t5 = perf_counter()

@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional, Union, List, Literal
+from typing import Optional, Union, List
 
 
 class Tools:

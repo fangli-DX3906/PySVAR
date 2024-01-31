@@ -1,6 +1,6 @@
 import datetime
 import random
-from typing import Literal, Tuple, Optional
+from typing import Literal, Tuple, Optional, List
 import numpy as np
 import multiprocessing
 from multiprocessing import Lock, Value
@@ -58,21 +58,26 @@ class SignRestriction(SetIdentifiedSVAR):
         Q = np.sign(np.diag(R)).reshape((-1, 1)) * Q
         return Q
 
+    def _update_once(self,
+                     length_to_check: int = 1) -> Tuple:
+        D = self.draw_rotation()
+        self.tool.update(rotation=D)
+        self.tool.estimate_irf(length=length_to_check)
+        _irfs_ = self.tool.irf
+        irf_sign = np.sign(np.sum(_irfs_, axis=1).reshape((self.n_vars, self.n_vars)))
+        idx, sorted_signs = self._sort_row(irf_sign)
+        diff_sign = self.target_signs - sorted_signs
+        return diff_sign, D, idx
+
     def _check_sign_parallel(self,
                              queue: multiprocessing.Queue,
                              counter: multiprocessing.Value,
                              lock: multiprocessing.Lock,
                              n_rotation_per_process: int,
-                             length_to_check: int = 1):
+                             length_to_check: int = 1) -> None:
         results = []
         while len(results) < n_rotation_per_process:
-            D = self.draw_rotation()
-            self.tool.update(rotation=D)
-            self.tool.estimate_irf(length=length_to_check)
-            _irfs_ = self.tool.irf
-            irf_sign = np.sign(np.sum(_irfs_, axis=1).reshape((self.n_vars, self.n_vars)))
-            idx, sorted_signs = self._sort_row(irf_sign)
-            diff_sign = self.target_signs - sorted_signs
+            diff_sign, D, idx = self._update_once(length_to_check=length_to_check)
             if np.sum(diff_sign ** 2) == self.num_unrestricted:
                 D = D[:, idx]
                 results.append(D)
@@ -82,17 +87,11 @@ class SignRestriction(SetIdentifiedSVAR):
 
     def _check_sign_wo_parallel(self,
                                 n_rotation: int,
-                                length_to_check: int = 1):
+                                length_to_check: int = 1) -> List:
         rotation_list = []
         pbar = tqdm(total=n_rotation, desc=f'Drawing {n_rotation} rotations...')
         while len(rotation_list) < n_rotation:
-            D = self.draw_rotation()
-            self.tool.update(rotation=D)
-            self.tool.estimate_irf(length=length_to_check)
-            _irfs_ = self.tool.irf
-            irf_sign = np.sign(np.sum(_irfs_, axis=1).reshape((self.n_vars, self.n_vars)))
-            idx, sorted_signs = self._sort_row(irf_sign)
-            diff_sign = self.target_signs - sorted_signs
+            diff_sign, D, idx = self._update_once(length_to_check=length_to_check)
             if np.sum(diff_sign ** 2) == self.num_unrestricted:
                 D = D[:, idx]
                 rotation_list.append(D)
@@ -142,6 +141,6 @@ class SignRestriction(SetIdentifiedSVAR):
 
             self.rotation_list = rotation_list[:n_rotation]
         else:
-            self.rotation_list = self._check_sign_wo_parallel(n_rotation, length_to_check)
+            self.rotation_list = self._check_sign_wo_parallel(n_rotation, length_to_check=length_to_check)
 
         self._full_irf()

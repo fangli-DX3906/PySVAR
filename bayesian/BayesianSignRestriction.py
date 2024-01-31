@@ -1,4 +1,4 @@
-from typing import Union, Literal, List, Optional
+from typing import Union, Literal, Optional
 import numpy as np
 import datetime
 
@@ -35,12 +35,14 @@ class BayesianSignRestriction(SignRestriction):
                                             prior_name=prior_name,
                                             prior_params=prior_params)
 
-    def simulate(self,
+    def identify(self,
                  n_burn: int,
                  n_sims: int,
                  n_rotation: int,
+                 # parallel: bool = False,
+                 # n_process: int = 4,
                  length_to_check: int = 1,
-                 seed: Union[bool, int] = False):
+                 seed: Union[bool, int] = False) -> None:
         if seed:
             np.random.seed(seed)
 
@@ -66,11 +68,7 @@ class BayesianSignRestriction(SignRestriction):
                     if np.sum(diff_sign ** 2) == self.num_unrestricted:
                         counter += 1
                         counter_for_each_draw += 1
-                        print(f'{counter} accepted rotation/{n_rotation * n_sims} required rotations')
                         D = D[:, idx]
                         rotation_list.append(D)
-
         self.rotation_list = rotation_list
         self._full_irf()
-
-        # TODO: support parallel
