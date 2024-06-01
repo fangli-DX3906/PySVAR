@@ -1,19 +1,17 @@
-import numpy as np
-from pandas import date_range
-import datetime
 from typing import Literal, Optional
+import numpy as np
 import random
 
 from estimation.Estimation import Estimation
+from utils.date_parser import DateParser
 
 
 class BaseModel(Estimation):
     def __init__(self,
                  data: np.ndarray,
                  var_names: list,
-                 date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: Optional[datetime.datetime],
-                 date_end: Optional[datetime.datetime],
+                 date_frequency: Literal['M', 'Q', 'A'] = None,
+                 date_start: str = None,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -24,16 +22,17 @@ class BaseModel(Estimation):
         self.identity = np.eye(self.n_vars)
         self.constant = constant
         self.criterion = info_criterion
-        if self.n_vars != len(self.var_names):
-            raise ValueError('Names are not consistent with data dimension!')
-        if date_start is not None and date_end is not None:
-            self.date_start = date_start
-            self.date_end = date_end
-            self.date_time_span = list(date_range(start=date_start, end=date_end, freq=date_frequency).to_pydatetime())
+        if date_start is not None:
+            self.dates = DateParser(start=date_start, n_dates=self.n_obs, fequency=date_frequency)
         else:
             self.date_start = 1
             self.date_end = self.n_obs
             self.date_time_span = list(range(self.date_start, self.date_end + 1))
+
+        if len(self.var_names) < self.n_vars:
+            for i in range(len(self.var_names) + 1, self.n_vars + 1):
+                self.var_names.append(f'Variable{i}')
+
         if lag_order:
             self.lag_order = lag_order
         else:

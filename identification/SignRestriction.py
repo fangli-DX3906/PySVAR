@@ -15,9 +15,8 @@ class SignRestriction(SetIdentifiedSVAR):
                  var_names: list,
                  shock_names: list,
                  target_signs: np.ndarray,
-                 date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: Optional[datetime.datetime] = None,
-                 date_end: Optional[datetime.datetime] = None,
+                 date_frequency: Literal['M', 'Q', 'A']= None,
+                 date_start: Optional[str] = None,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -26,7 +25,6 @@ class SignRestriction(SetIdentifiedSVAR):
                          shock_names=shock_names,
                          date_frequency=date_frequency,
                          date_start=date_start,
-                         date_end=date_end,
                          lag_order=lag_order,
                          constant=constant,
                          info_criterion=info_criterion)

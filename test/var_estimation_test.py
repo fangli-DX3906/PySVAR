@@ -1,6 +1,5 @@
 import scipy.io as spio
 import numpy as np
-import datetime as dt
 from estimation.VAR import VAR
 
 # replicate Kilian (2009)
@@ -8,8 +7,7 @@ oil = spio.loadmat('data/oil.mat')
 oil = oil['data']
 names = ['OilProd', 'REA', 'OilPrice']
 shocks = ['Supply', 'Agg Demand', 'Specific Demand']
-m = VAR(data=oil, var_names=names, date_frequency='M', lag_order=24,
-        date_start=dt.datetime(1973, 1, 1), date_end=dt.datetime(2007, 11, 30))
+m = VAR(data=oil, var_names=names, date_frequency='M', lag_order=24, date_start='197301')
 m.solve()
 
 # estimate the IRF (Figure 3)

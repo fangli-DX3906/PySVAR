@@ -10,34 +10,34 @@ class Tools:
                  cov_mat: np.ndarray,
                  rotation: Optional[np.ndarray] = None):
         self.data = data
-        self.lag_order_ = lag_order
+        self.lag_order = lag_order
         self.comp_mat = comp_mat
         self.cov_mat = cov_mat
         self.rotation = rotation
-        self.n_obs_, self.n_vars_ = self.data.shape
+        self.n_obs, self.n_vars = self.data.shape
         self.rotation = rotation
+
         if rotation is not None:
             self.estimate_irf()
             # self._irfs_ is the point estimate for VAR, self.irf varies with each update
-            self._irfs_ = self.irf
+            self.var_irf_point_estimate = self.irf
 
     def estimate_irf(self,
                      length: Optional[int] = None) -> None:
-        j = np.concatenate((np.eye(self.n_vars_), np.zeros((self.n_vars_, self.n_vars_ * (self.lag_order_ - 1)))),
-                           axis=1)
-        aa = np.eye(self.n_vars_ * self.lag_order_)
+        j = np.concatenate((np.eye(self.n_vars), np.zeros((self.n_vars, self.n_vars * (self.lag_order - 1)))), axis=1)
+        aa = np.eye(self.n_vars * self.lag_order)
         # cholesky gives you the lower triangle in numpy
         chol = np.linalg.cholesky(self.cov_mat)
         irf = np.dot(np.dot(np.dot(np.dot(j, aa), j.T), chol), self.rotation)
-        irf = irf.reshape((self.n_vars_ ** 2, -1), order='F')
+        irf = irf.reshape((self.n_vars ** 2, -1), order='F')
         if length is not None:
             H = length
         else:
-            H = self.n_obs_ - self.lag_order_ + 1
+            H = self.n_obs - self.lag_order + 1
         for i in range(1, H):
             aa = np.dot(aa, self.comp_mat)
             temp = np.dot(np.dot(np.dot(np.dot(j, aa), j.T), chol), self.rotation)
-            temp = temp.reshape((self.n_vars_ ** 2, -1), order='F')
+            temp = temp.reshape((self.n_vars ** 2, -1), order='F')
             irf = np.concatenate((irf, temp), axis=1)
         self.irf = irf
 
@@ -45,25 +45,23 @@ class Tools:
                     irfs: np.ndarray) -> np.ndarray:
         irf_mat = np.transpose(irfs)
         irf_mat_sq = irf_mat ** 2
-        irf_mat_sq = irf_mat_sq.reshape((-1, self.n_vars_, self.n_vars_), order='F')
+        irf_mat_sq = irf_mat_sq.reshape((-1, self.n_vars, self.n_vars), order='F')
         irf_sq_sum_h = np.cumsum(irf_mat_sq, axis=0)
         total_fev = np.sum(irf_sq_sum_h, axis=2)
         total_fev_expand = np.expand_dims(total_fev, axis=2)
         vd = irf_sq_sum_h / total_fev_expand
-        vd = vd.T.reshape((self.n_vars_ ** 2, -1))
+        vd = vd.T.reshape((self.n_vars ** 2, -1))
         return vd
 
-    # TODO: check this
     def estimate_hd(self,
                     shocks: np.ndarray,
                     irfs: np.ndarray) -> np.ndarray:
-        hd = np.zeros((self.n_vars_, self.n_obs_ - self.lag_order, self.n_vars_))
-        for iperiod in range(self.n_obs_ - self.lag_order):
-            for ishock in range(self.n_vars_):
-                for ivar in range(self.n_vars_):
-                    shocks_ = shocks[ishock, :iperiod]
-                    hd[ivar, iperiod, ishock] = np.dot(irfs[ivar + ishock * self.n_vars_, :iperiod], shocks_[::-1])
-                    hd = hd.swapaxes(0, 2)
+        hd = np.zeros((self.n_vars, self.n_obs - self.lag_order))
+        for ivar in range(self.n_vars):
+            for iperiod in range(self.n_obs - self.lag_order):
+                shocks_ = shocks[0, :iperiod + 1]
+                hd[ivar, iperiod] = np.dot(irfs[ivar, :iperiod + 1], shocks_[::-1])
+
         return hd
 
     def make_confid_intvl(self,

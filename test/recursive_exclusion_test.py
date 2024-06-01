@@ -11,8 +11,8 @@ s = ['Supply', 'Agg Demand', 'Specific Demand']
 e = {(0, 1), (0, 2), (1, 2)}
 h = 15
 
-exln = ExclusionRestriction(data=o, var_names=n, shock_names=s, exclusion=e, date_frequency='M', lag_order=24)
-recr = RecursiveIdentification(data=o, var_names=n, shock_names=s, date_frequency='M', lag_order=24)
+exln = ExclusionRestriction(data=o, var_names=n, shock_names=s, exclusion=e, lag_order=24, date_frequency='M')
+recr = RecursiveIdentification(data=o, var_names=n, shock_names=s, lag_order=24, date_frequency='M')
 
 exln.identify()
 exln.bootstrap(seed=3906)

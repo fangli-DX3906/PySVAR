@@ -13,9 +13,8 @@ class SVAR(BaseModel):
                  data: np.ndarray,
                  var_names: list,
                  shock_names: list,
-                 date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: Optional[datetime.datetime],
-                 date_end: Optional[datetime.datetime],
+                 date_frequency: Literal['M', 'Q', 'A'] = None,
+                 date_start: Optional[str] = None,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -23,7 +22,6 @@ class SVAR(BaseModel):
                          var_names=var_names,
                          date_frequency=date_frequency,
                          date_start=date_start,
-                         date_end=date_end,
                          lag_order=lag_order,
                          constant=constant,
                          info_criterion=info_criterion)
@@ -150,9 +148,8 @@ class SetIdentifiedSVAR(SVAR):
                  data: np.ndarray,
                  var_names: list,
                  shock_names: list,
-                 date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: Optional[datetime.datetime],
-                 date_end: Optional[datetime.datetime],
+                 date_frequency: Literal['M', 'Q', 'A'] = None,
+                 date_start: Optional[str] = None,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -161,7 +158,6 @@ class SetIdentifiedSVAR(SVAR):
                          shock_names=shock_names,
                          date_frequency=date_frequency,
                          date_start=date_start,
-                         date_end=date_end,
                          lag_order=lag_order,
                          constant=constant,
                          info_criterion=info_criterion)
@@ -206,9 +202,8 @@ class PointIdentifiedSVAR(SVAR):
                  data: np.ndarray,
                  var_names: list,
                  shock_names: list,
-                 date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: Optional[datetime.datetime],
-                 date_end: Optional[datetime.datetime],
+                 date_frequency: Literal['M', 'Q', 'A'] = None,
+                 date_start: Optional[str] = None,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -217,7 +212,6 @@ class PointIdentifiedSVAR(SVAR):
                          shock_names=shock_names,
                          date_frequency=date_frequency,
                          date_start=date_start,
-                         date_end=date_end,
                          lag_order=lag_order,
                          constant=constant,
                          info_criterion=info_criterion)

@@ -1,39 +1,31 @@
-import datetime
-import random
 from typing import Union, Literal, List, Optional
 import numpy as np
+import random
 
 from Base import BaseModel
-from Plotter import Plotter
-from Tools import Tools
+from utils.Tools import Tools
+from utils.Plotter import Plotter
 
 
 class VAR(BaseModel):
     def __init__(self,
                  data: np.ndarray,
                  var_names: list,
-                 date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: Optional[datetime.datetime] = None,
-                 date_end: Optional[datetime.datetime] = None,
+                 date_frequency: Literal['M', 'Q', 'A']= None,
+                 date_start: Optional[str] = None,
                  lag_order: Optional[int] = None,
                  shock_names: Optional[List[str]] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
-        super().__init__(data=data,
-                         var_names=var_names,
-                         date_frequency=date_frequency,
-                         date_start=date_start,
-                         date_end=date_end,
-                         lag_order=lag_order,
-                         constant=constant,
-                         info_criterion=info_criterion)
+        super().__init__(data=data, var_names=var_names, date_frequency=date_frequency, date_start=date_start,
+                         lag_order=lag_order, constant=constant, info_criterion=info_criterion)
+
         if shock_names is not None:
             self.shock_names = shock_names
         else:
-            self.shock_names = [f'shock{_ + 1}' for _ in range(self.n_vars)]
-        self.plotter = Plotter(var_names=var_names,
-                               shock_names=self.shock_names,
-                               date_frequency=date_frequency)
+            self.shock_names = [f'Shock{_ + 1}' for _ in range(self.n_vars)]
+
+        self.plotter = Plotter(var_names=var_names, shock_names=self.shock_names, date_frequency=date_frequency)
         self.H = self.n_obs - self.lag_order
 
     def solve(self):
@@ -43,8 +35,8 @@ class VAR(BaseModel):
                           comp_mat=self.comp_mat,
                           cov_mat=self.cov_mat,
                           rotation=np.eye(self.n_vars))
-        self.irf_point_estimate = self.tool._irfs_
-        self.vd_point_estimate = self.tool.estimate_vd(self.tool._irfs_)
+        self.irf_point_estimate = self.tool.var_irf_point_estimate
+        self.vd_point_estimate = self.tool.estimate_vd(self.tool.var_irf_point_estimate)
 
     def irf(self, h: int) -> np.ndarray:
         # irf_point_estimate keeps track of the longest possible IRF, so does vd_point_estimate

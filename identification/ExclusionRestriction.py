@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.optimize as spo
 from typing import Literal, Optional, Set
-import datetime
 
 from estimation.SVAR import PointIdentifiedSVAR
 
@@ -12,9 +11,8 @@ class ExclusionRestriction(PointIdentifiedSVAR):
                  var_names: list,
                  shock_names: list,
                  exclusion: Set[tuple],
-                 date_frequency: Literal['D', 'W', 'M', 'Q', 'A'],
-                 date_start: Optional[datetime.datetime] = None,
-                 date_end: Optional[datetime.datetime] = None,
+                 date_frequency: Literal['M', 'Q', 'A'] = None,
+                 date_start: Optional[str] = None,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
@@ -23,7 +21,6 @@ class ExclusionRestriction(PointIdentifiedSVAR):
                          shock_names=shock_names,
                          date_frequency=date_frequency,
                          date_start=date_start,
-                         date_end=date_end,
                          lag_order=lag_order,
                          constant=constant,
                          info_criterion=info_criterion)

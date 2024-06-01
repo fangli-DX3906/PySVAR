@@ -1,5 +1,4 @@
 import numpy as np
-import datetime as dt
 import scipy.io as spio
 from time import perf_counter
 
@@ -7,7 +6,7 @@ from SignRestriction import SignRestriction
 
 if __name__ == '__main__':
     # replicate Marco Brianti (2023)
-    data = spio.loadmat('../data/sign_res.mat')
+    data = spio.loadmat('/Users/fangli/PySVAR/PySVAR/data/sign_res.mat')
     data = data['y']
     names = ['Output', 'TFP', 'Investment', 'StockReturn', 'Cash', 'CreditSpread', 'Uncertainty', 'Inflation']
     shocks = ['Supply', 'Financial', 'Uncertainty', 'Residual']
@@ -26,8 +25,7 @@ if __name__ == '__main__':
                           var_names=names,
                           shock_names=shocks,
                           target_signs=signs,
-                          date_start=dt.datetime(1982, 1, 1),
-                          date_end=dt.datetime(2020, 3, 31),
+                          date_start='1982Q1',
                           date_frequency='Q')
     t0 = perf_counter()
     fsr.identify(n_rotation=200, parallel=True, seed=3906)
