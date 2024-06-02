@@ -4,7 +4,7 @@ from scipy.linalg import null_space
 from typing import Literal, Optional, Union
 import datetime
 
-from estimation.SVAR import PointIdentifiedSVAR
+from bricks.SVAR import PointIdentifiedSVAR
 
 if __name__ == '__main__':
     print('呼啊，喊啊，竟然只听见声音，消失的声音')

@@ -2,8 +2,8 @@ from typing import Union, Literal, Optional
 import numpy as np
 import datetime
 
-from identification.SignRestriction import SignRestriction
-from bayesian.Bayesian import Bayesian
+from identification.sign_restriction import SignRestriction
+from bayesian.bayesian import Bayesian
 
 
 class BayesianSignRestriction(SignRestriction):

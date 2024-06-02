@@ -1,8 +1,7 @@
-import datetime
 from typing import Literal, Optional
 import numpy as np
 
-from estimation.SVAR import PointIdentifiedSVAR
+from estimation.svar import PointIdentifiedSVAR
 
 
 class RecursiveIdentification(PointIdentifiedSVAR):
@@ -10,11 +9,12 @@ class RecursiveIdentification(PointIdentifiedSVAR):
                  data: np.ndarray,
                  var_names: list,
                  shock_names: list,
-                 date_frequency: Literal['M', 'Q', 'A']= None,
+                 date_frequency: Literal['M', 'Q', 'A'] = None,
                  date_start: Optional[str] = None,
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
+
         super().__init__(data=data,
                          var_names=var_names,
                          shock_names=shock_names,

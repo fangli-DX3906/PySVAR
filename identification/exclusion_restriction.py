@@ -2,7 +2,7 @@ import numpy as np
 import scipy.optimize as spo
 from typing import Literal, Optional, Set
 
-from estimation.SVAR import PointIdentifiedSVAR
+from estimation.svar import PointIdentifiedSVAR
 
 
 class ExclusionRestriction(PointIdentifiedSVAR):
@@ -16,6 +16,7 @@ class ExclusionRestriction(PointIdentifiedSVAR):
                  lag_order: Optional[int] = None,
                  constant: bool = True,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
+
         super().__init__(data=data,
                          var_names=var_names,
                          shock_names=shock_names,
@@ -24,6 +25,7 @@ class ExclusionRestriction(PointIdentifiedSVAR):
                          lag_order=lag_order,
                          constant=constant,
                          info_criterion=info_criterion)
+
         self.identification = 'exclusion identification'
         self.exclusions = exclusion
         self.rotation = None
@@ -32,9 +34,7 @@ class ExclusionRestriction(PointIdentifiedSVAR):
             raise ValueError('The model is not exactly identified!')
         self.all_list = {(i, j) for i in range(self.n_vars) for j in range(self.n_vars)}
 
-    def target_function(self,
-                        A: np.ndarray,
-                        cov_mat: np.ndarray):
+    def target_function(self, A: np.ndarray, cov_mat: np.ndarray):
         A = A.reshape((self.n_vars, -1))
         func = np.dot(A, A.T) - cov_mat
         func_sum = 0

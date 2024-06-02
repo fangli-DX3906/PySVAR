@@ -4,7 +4,7 @@ from scipy.linalg import null_space
 from typing import Union, Literal, List, Optional
 import datetime
 
-from estimation.SVAR import PointIdentifiedSVAR
+from bricks.SVAR import PointIdentifiedSVAR
 
 if __name__ == '__main__':
     print('飘啊，荡啊，身体竭力地行走的地上')

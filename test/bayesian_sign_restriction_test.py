@@ -3,7 +3,7 @@ import numpy as np
 from time import perf_counter
 
 from bayesian.BayesianSignRestriction import BayesianSignRestriction
-from identification.SignRestriction import SignRestriction
+from identification.sign_restriction import SignRestriction
 
 if __name__ == '__main__':
     data = spio.loadmat('./data/sign_res.mat')

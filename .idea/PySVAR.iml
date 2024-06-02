@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/estimation" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/data" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/dist" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/auxillary" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

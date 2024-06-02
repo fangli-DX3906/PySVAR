@@ -1,12 +1,11 @@
-import datetime
 import random
-from typing import Literal, Tuple, Optional, List
-import numpy as np
 import multiprocessing
+import numpy as np
+from typing import Literal, Tuple, Optional, List
 from multiprocessing import Lock, Value
 from tqdm import tqdm
 
-from estimation.SVAR import SetIdentifiedSVAR
+from estimation.svar import SetIdentifiedSVAR
 
 
 class SignRestriction(SetIdentifiedSVAR):
@@ -15,19 +14,23 @@ class SignRestriction(SetIdentifiedSVAR):
                  var_names: list,
                  shock_names: list,
                  target_signs: np.ndarray,
-                 date_frequency: Literal['M', 'Q', 'A']= None,
-                 date_start: Optional[str] = None,
-                 lag_order: Optional[int] = None,
                  constant: bool = True,
-                 info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
+                 lag_order: Optional[int] = None,
+                 max_lag_order: Optional[int] = 8,
+                 info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic',
+                 date_frequency: Literal['M', 'Q', 'A'] = 'Q',
+                 date_start: str = None):
+
         super().__init__(data=data,
                          var_names=var_names,
                          shock_names=shock_names,
-                         date_frequency=date_frequency,
-                         date_start=date_start,
-                         lag_order=lag_order,
                          constant=constant,
-                         info_criterion=info_criterion)
+                         lag_order=lag_order,
+                         max_lag_order=max_lag_order,
+                         info_criterion=info_criterion,
+                         date_frequency=date_frequency,
+                         date_start=date_start)
+
         self.identification = 'sign restriction'
         self.target_signs = target_signs
         self.n_ones = np.sum(self.target_signs == 1)
@@ -56,12 +59,10 @@ class SignRestriction(SetIdentifiedSVAR):
         Q = np.sign(np.diag(R)).reshape((-1, 1)) * Q
         return Q
 
-    def _update_once(self,
-                     length_to_check: int = 1) -> Tuple:
+    def _update_once(self, length_to_check: int = 1) -> Tuple:
         D = self.draw_rotation()
-        self.tool.update(rotation=D)
-        self.tool.estimate_irf(length=length_to_check)
-        _irfs_ = self.tool.irf
+        self.tools.update(rotation=D)
+        _irfs_ = self.tools.estimate_irf(length=length_to_check)
         irf_sign = np.sign(np.sum(_irfs_, axis=1).reshape((self.n_vars, self.n_vars)))
         idx, sorted_signs = self._sort_row(irf_sign)
         diff_sign = self.target_signs - sorted_signs

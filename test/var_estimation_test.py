@@ -1,9 +1,10 @@
 import scipy.io as spio
 import numpy as np
-from estimation.VAR import VAR
+
+from estimation.var import VAR
 
 # replicate Kilian (2009)
-oil = spio.loadmat('data/oil.mat')
+oil = spio.loadmat('./data/oil.mat')
 oil = oil['data']
 names = ['OilProd', 'REA', 'OilPrice']
 shocks = ['Supply', 'Agg Demand', 'Specific Demand']
@@ -28,4 +29,4 @@ for _ in range(m.irf_mat_full.shape[0]):
     m.irf_mat_full[_, 1, :] = -m.irf_mat_full[_, 1, :]
     m.irf_mat_full[_, 2, :] = -m.irf_mat_full[_, 2, :]
 
-m.plot_irf(h=40, var_list=names, sigs=[68, 95], with_ci=True)
+m.plot_irf(h=h, var_list=names, sigs=[68, 95])
