@@ -30,5 +30,6 @@ t0 = perf_counter()
 fsr.identify(n_rotation=200, parallel=True, seed=3906)
 t1 = perf_counter()
 print(f'running time: {t1 - t0} seconds')
-_ = fsr.irf(h=40)
+
 fsr.plot_irf(h=40, var_list=var_plot, shock_list=shock_plot, sigs=[68, 95])
+fsr.plot_vd(h=40, var_list=var_plot, shock_list=shock_plot)

@@ -33,5 +33,4 @@ for m in mdls:
         m.irf_mat_full[_, 6, :] = np.cumsum(m.irf_mat_full[_, 6, :])
         m.irf_mat_full[_, 1, :] = -m.irf_mat_full[_, 1, :]
         m.irf_mat_full[_, 2, :] = -m.irf_mat_full[_, 2, :]
-
     m.plot_irf(h=15, var_list=n, sigs=95)

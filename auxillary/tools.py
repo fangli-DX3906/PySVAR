@@ -24,8 +24,7 @@ class Tools:
     def estimate_irf(self, length: Optional[int] = None) -> np.ndarray:
         j = np.concatenate((np.eye(self.n_vars), np.zeros((self.n_vars, self.n_vars * (self.lag_order - 1)))), axis=1)
         aa = np.eye(self.n_vars * self.lag_order)
-        # cholesky gives you the lower triangle in numpy
-        chol = np.linalg.cholesky(self.cov_mat)
+        chol = np.linalg.cholesky(self.cov_mat)  # lower triangle
         irf = np.dot(np.dot(np.dot(np.dot(j, aa), j.T), chol), self.rotation)
         irf = irf.reshape((self.n_vars ** 2, -1), order='F')
 
@@ -56,15 +55,15 @@ class Tools:
     def estimate_hd(self, shocks: np.ndarray, irfs: np.ndarray) -> np.ndarray:
         hd = np.zeros((self.n_vars ** 2, self.n_obs - self.lag_order))
 
-        for ishock in range(self.n_vars):
-            for ivar in range(self.n_vars):
-                for iperiod in range(self.n_obs - self.lag_order):
-                    shocks_ = shocks[ishock, :iperiod + 1]
-                    hd[ivar, iperiod] = np.dot(irfs[ishock * self.n_vars + ivar, :iperiod + 1], shocks_[::-1])
+        for s in range(self.n_vars):
+            for v in range(self.n_vars):
+                for l in range(self.n_obs - self.lag_order):
+                    stemp = shocks[s, :l + 1]
+                    hd[s * self.n_vars + v, l] = np.dot(irfs[s * self.n_vars + v, :l + 1], stemp[::-1])
 
         return hd
 
-    def make_confid_intvl(self, mat: np.ndarray, length: Optional[int], sigs: Union[int, List]) -> dict:
+    def make_confid_intvl(self, mat: np.ndarray, length: Optional[int], sigs: Union[int, List[int]]) -> dict:
         if length is not None:
             mat = mat[:, :, :length]
 

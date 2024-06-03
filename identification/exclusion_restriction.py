@@ -11,20 +11,22 @@ class ExclusionRestriction(PointIdentifiedSVAR):
                  var_names: list,
                  shock_names: list,
                  exclusion: Set[tuple],
-                 date_frequency: Literal['M', 'Q', 'A'] = None,
-                 date_start: Optional[str] = None,
-                 lag_order: Optional[int] = None,
                  constant: bool = True,
-                 info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
+                 lag_order: Optional[int] = None,
+                 max_lag_order: Optional[int] = 8,
+                 info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic',
+                 date_frequency: Literal['M', 'Q', 'A'] = 'Q',
+                 date_start: Optional[str] = None):
 
         super().__init__(data=data,
                          var_names=var_names,
                          shock_names=shock_names,
-                         date_frequency=date_frequency,
-                         date_start=date_start,
-                         lag_order=lag_order,
                          constant=constant,
-                         info_criterion=info_criterion)
+                         lag_order=lag_order,
+                         max_lag_order=max_lag_order,
+                         info_criterion=info_criterion,
+                         date_frequency=date_frequency,
+                         date_start=date_start)
 
         self.identification = 'exclusion identification'
         self.exclusions = exclusion
@@ -32,6 +34,7 @@ class ExclusionRestriction(PointIdentifiedSVAR):
         self.n_restrictions = len(exclusion)
         if self.n_restrictions != self.n_vars * (self.n_vars - 1) / 2:
             raise ValueError('The model is not exactly identified!')
+
         self.all_list = {(i, j) for i in range(self.n_vars) for j in range(self.n_vars)}
 
     def target_function(self, A: np.ndarray, cov_mat: np.ndarray):

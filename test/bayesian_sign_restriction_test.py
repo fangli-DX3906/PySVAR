@@ -2,7 +2,7 @@ import scipy.io as spio
 import numpy as np
 from time import perf_counter
 
-from bayes.bayesian_sign_restriction import BayesianSignRestriction
+from bayesian.bayesian_sign_restriction import BayesianSignRestriction
 from identification.sign_restriction import SignRestriction
 
 data = spio.loadmat('./data/sign_res.mat')
@@ -27,9 +27,9 @@ fsr = SignRestriction(data=data,
 t0 = perf_counter()
 fsr.identify(n_rotation=200, parallel=True, seed=3906)
 t1 = perf_counter()
-_ = fsr.irf(h=40)
 fsr.plot_irf(h=40, var_list=var_plot, shock_list=shock_plot, sigs=[68, 95])
 
+# bayesian method
 bsr = BayesianSignRestriction(data=data,
                               var_names=names,
                               shock_names=shocks,
@@ -37,7 +37,6 @@ bsr = BayesianSignRestriction(data=data,
                               prior='Diffuse',
                               date_frequency='Q')
 t2 = perf_counter()
-bsr.identify(n_burn=1000, n_sims=100, n_rotation=2, seed=3906)  # bayesian method
+bsr.identify(n_burn=1000, n_sims=100, n_rotation=2, seed=3906)
 t3 = perf_counter()
-_ = bsr.irf(h=40)
 bsr.plot_irf(h=40, var_list=var_plot, shock_list=shock_plot, sigs=[68, 95])

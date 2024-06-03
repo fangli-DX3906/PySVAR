@@ -99,10 +99,12 @@ class SignRestriction(SetIdentifiedSVAR):
 
     def identify(self,
                  n_rotation: int,
+                 length_to_check: int = 1,
+                 how: Literal['median', 'average'] = 'median',
                  parallel: bool = False,
                  n_process: int = 4,
-                 length_to_check: int = 1,
                  seed: Optional[int] = None) -> None:
+
         if seed is not None:
             np.random.seed(seed)
             random.seed(seed)
@@ -142,4 +144,4 @@ class SignRestriction(SetIdentifiedSVAR):
         else:
             self.rotation_list = self._check_sign_wo_parallel(n_rotation, length_to_check=length_to_check)
 
-        self._full_irf()
+        self.calc_point_estimate(how=how)

@@ -43,12 +43,15 @@ class Plotting:
         if nv <= 3:
             n_cols = nv
             n_rows = 1
+            legend_pos = (-0.8, -0.15)
         elif nv == 4:
             n_cols = 2
             n_rows = 2
+            legend_pos = (-0.15, -0.15)
         else:
             n_cols = 3
             n_rows = int(nv / 3) if nv % 3 == 0 else nv // 3 + 1
+            legend_pos = (-0.8, -0.15)
         x_ticks = range(h + 1)
 
         for i_shock in range(ns):
@@ -87,7 +90,7 @@ class Plotting:
                 ax.spines['left'].set_linewidth(1)
                 ax.spines['bottom'].set_linewidth(1)
 
-            plt.legend(prop={'size': 35}, loc='upper center', bbox_to_anchor=(-0.8, -0.15), ncol=len(sigs) + 1,
+            plt.legend(prop={'size': 35}, loc='upper center', bbox_to_anchor=legend_pos, ncol=len(sigs) + 1,
                        frameon=False, borderaxespad=-0.1)
             if save_path is not None:
                 plt.savefig(save_path + f'/irf_{shock_name}.png', bbox_inches='tight', dpi=200)
@@ -104,12 +107,15 @@ class Plotting:
         if nv <= 3:
             n_cols = nv
             n_rows = 1
+            legend_pos = (-0.8, -0.15)
         elif nv == 4:
             n_cols = 2
             n_rows = 2
+            legend_pos = (-0.15, -0.15)
         else:
             n_cols = 3
             n_rows = nv // 3 + 1
+            legend_pos = (-0.8, -0.15)
         x_ticks = range(h + 1)
 
         plt.figure(figsize=(n_cols * 10, n_rows * 9))
@@ -149,7 +155,7 @@ class Plotting:
             ax.spines['left'].set_linewidth(1)
             ax.spines['bottom'].set_linewidth(1)
 
-        plt.legend(prop={'size': 35}, loc='upper center', bbox_to_anchor=(-0.8, -0.15), ncol=3,
+        plt.legend(prop={'size': 35}, loc='upper center', bbox_to_anchor=legend_pos, ncol=3,
                    frameon=False, borderaxespad=-0.1)
 
         if save_path is not None:

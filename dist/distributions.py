@@ -14,12 +14,13 @@ class Distribution(metaclass=ABCMeta):
 class InverseWhishartDist(Distribution):
     def __init__(self,
                  s: np.ndarray,
-                 nu: np.ndarray):
+                 nu: np.ndarray,
+                 check: bool = False):
         self.s = s
         self.nu = nu
-
-        # if s.shape[0] != nu.shape[0]:
-        #     raise ValueError('Dimension incorrect')
+        if check:
+            if np.linalg.det(self.s) < 0:
+                raise ValueError(f's is not positive definite')
 
     def __call__(self):
         S = np.linalg.inv(self.s)
@@ -42,9 +43,3 @@ class MultiNormalDist(Distribution):
 
 # which to import
 __all__ = ['InverseWhishartDist', 'MultiNormalDist']
-
-if __name__ == '__main__':
-    a = InverseWhishartDist(np.array([[1, 2], [3, 4]]), np.array([1, 2]))
-    print(a)
-    b = MultiNormalDist(np.array([[1, 2], [3, 4]]), np.array([1, 2]))
-    print(b)

@@ -2,7 +2,7 @@ from typing import Literal
 import numpy as np
 
 
-def estimate_var(data: np.ndarray, lag: int, constant: bool = True):
+def estim_sys(data: np.ndarray, lag: int, constant: bool = True):
     t, q = data.shape
     y = data.T
     yy = y[:, lag - 1:t]
@@ -41,7 +41,7 @@ def optim_lag(data: np.ndarray,
     hqc = []
     for lag in range(1, max_lags + 1):
         phim = q ** 2 * lag + q
-        _, cov_mat_, _, _, _ = estimate_var(data, lag, constant)
+        _, cov_mat_, _, _, _ = estim_sys(data, lag, constant)
         sigma = cov_mat_[:q, :q]
         aic.append(np.log(np.linalg.det(sigma)) + 2 * phim / t)
         bic.append(np.log(np.linalg.det(sigma)) + phim * np.log(t) / t)
