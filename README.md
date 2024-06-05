@@ -76,7 +76,7 @@ The future versions will include:
 
 <u>Jan 2024 update</u>: Support for parallel computing has been implemented for sign restrictions, resulting in a 50% speed increase.
 
-<u>May 2024 update</u>: Support for optimization based identiifcation method.
+<u>May 2024 update</u>: Support for optimization based identification method.
 
 
 
