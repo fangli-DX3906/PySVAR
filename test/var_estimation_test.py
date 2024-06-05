@@ -27,5 +27,5 @@ for _ in range(m.irf_mat_full.shape[0]):
     m.irf_mat_full[_, 1, :] = -m.irf_mat_full[_, 1, :]
     m.irf_mat_full[_, 2, :] = -m.irf_mat_full[_, 2, :]
 
-m.plot_irf(h=h, var_list=names, sigs=[68, 95])
+m.plot_irf(h=h, var_list=names, sigs=[68, 95], save_path='./graphs')
 m.plot_vd(h=h, var_list=names)

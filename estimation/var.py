@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from tqdm import tqdm
 from typing import Union, Literal, List, Optional
 
 from base_model import Model
@@ -43,7 +44,7 @@ class VAR(Model):
         self.vd_mat_full = np.zeros((n_path, self.n_vars ** 2, self.H + 1))
         self.hd_mat_full = np.zeros((n_path, self.n_vars ** 2, self.H))
 
-        for r in range(n_path):
+        for r in tqdm(range(n_path), desc=f'Simulating {n_path} samples...'):
             y_r = self.make_bootstrap_sample()
             comp_mat_r, cov_mat_r, resid_r, _, _ = estim_sys(data=y_r,
                                                              lag=self.lag_order,

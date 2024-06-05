@@ -54,9 +54,9 @@ for m in mdls:
 
 where the point estimate and confidence interval are stored in `irf_point_estimate` and `irf_mat_full`, respectively.  Lastly call `.plot_irf()` to plot the impulse response. Here is the plot:
 
-![suppy](graphs/suppy.png)
-![agg_demand](graphs/agg_demand.png)
-![spe_demand](graphs/spe_demand.png)
+![suppy](graphs/irf_reduced shock 1.png)
+![agg_demand](graphs/irf_reduced shock 2.png)
+![spe_demand](graphs/irf_reduced shock 3.png)
 
 
 
@@ -67,10 +67,16 @@ The current beta version now includes sign restriction, recursive identification
 The future versions will include:
 
 * optimization-based identifications and identification through heteroscedasticity. 
+
 * historical decomposition and various visualizations.
+
 * Bayesian method.
 
+  
+
 <u>Jan 2024 update</u>: Support for parallel computing has been implemented for sign restrictions, resulting in a 50% speed increase.
+
+<u>May 2024 update</u>: Support for optimization based identiifcation method.
 
 
 
