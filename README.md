@@ -54,9 +54,9 @@ for m in mdls:
 
 where the point estimate and confidence interval are stored in `irf_point_estimate` and `irf_mat_full`, respectively.  Lastly call `.plot_irf()` to plot the impulse response. Here is the plot:
 
-![suppy](graphs/irf_reduced shock 1.png)
-![agg_demand](graphs/irf_reduced shock 2.png)
-![spe_demand](graphs/irf_reduced shock 3.png)
+![suppy](graphs/irf_reduced_shock1.png)
+![agg_demand](graphs/irf_reduced_shock2.png)
+![spe_demand](graphs/irf_reduced_shock3.png)
 
 
 
