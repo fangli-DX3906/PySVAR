@@ -4,21 +4,15 @@ from scipy.linalg import null_space
 
 from identification.optim_identification import OptimIdentification
 
-data = pd.read_csv('./data/oil_uncertainty.csv')
+data = pd.read_csv('/Users/fangli/PySVAR/PySVAR/data/oil_uncertainty.csv')
 var_names = ['OilVol', 'StockVol', 'VolRatio', 'WorldOilProd', 'IndustrialProd', 'WTISpotPrice', 'OilInventory']
 data = np.array(data[var_names])
 shocks = ['Uncertainty']
 
 
-# create a new class inherited from OptimIdentification
-# implement two methods:
-#   make_target_function(self, gamma, comp_mat: np.ndarray, cov_mat: np.ndarray)
-#   other_constraint(self, gamma)
-
-
+# A customized class inherited from the OptimIdentification that implements a target function two constraints
 class OilUncertainty(OptimIdentification):
-
-    def make_target_function(self, gamma, comp_mat: np.ndarray, cov_mat: np.ndarray):
+    def target_function(self, gamma, comp_mat: np.ndarray, cov_mat: np.ndarray):
         gamma = gamma.reshape((1, -1))
         gamma_null = null_space(gamma)
         rotation = np.concatenate((gamma.T, gamma_null), axis=1)
@@ -31,10 +25,14 @@ class OilUncertainty(OptimIdentification):
 
         return -(func + reg_part)
 
-    def other_constraint(self, gamma):
+    def constraint_garch_eq(self, gamma):
         return gamma[0]
 
+    def constraint_normalize_eq(self, gamma):
+        return np.dot(gamma, gamma) - 1
 
+
+# make an instance
 oil = OilUncertainty(
     data=data,
     var_names=var_names,
