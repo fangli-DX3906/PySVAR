@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Literal
 
 from dist.distributions import *
 from dist.priors import *
@@ -6,13 +7,13 @@ from dist.priors import *
 
 class PosteriorGenerator:
     def __init__(self,
+                 prior_name: Literal['Diffuse', 'NormalDiffuse', 'Minnesota', 'NaturalConjugate'],
                  likelihood_info: dict,
-                 prior_name: str,
                  prior_params: dict):
 
         self.likelihood_info = likelihood_info
-        self._parse_likelihood_info()
         self.prior = prior_dist_registry[prior_name](likelihood_info=self.likelihood_info, params=prior_params)
+        self._parse_likelihood_info()
 
     def _parse_likelihood_info(self):
         self.n = self.likelihood_info['n']
