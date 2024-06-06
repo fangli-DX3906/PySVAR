@@ -2,9 +2,9 @@ import random
 import numpy as np
 from typing import Literal, Optional, List, Union
 
-from auxillary.bricks import estim_sys, optim_lag
-from auxillary.plotting import Plotting
-from auxillary.tools import Tools
+from core.bricks import estim_sys, optim_lag
+from core.plotting import Plotting
+from core.tools import Tools
 from utils.date_parser import DateParser
 
 
@@ -86,9 +86,10 @@ class Model:
         else:
             Bhat = self.comp_mat[:self.n_vars, :]
         Bhat = Bhat.T
-        self.likelihood_info = {'Y': self.data, 'X': self.x.T, 'Bhat': Bhat,
-                                'sigma': self.cov_mat, 'n': self.n_vars, 't': self.n_obs,
-                                'p': self.lag_order, 'const': self.constant}
+        self.likelihood_info = {'Y': self.data, 'X': self.x.T,
+                                'Bhat': Bhat, 'sigma': self.cov_mat,
+                                'n': self.n_vars, 't': self.n_obs, 'p': self.lag_order,
+                                'const': self.constant, 'resids': self.residuals}
 
     def prepare_bootstrap(self) -> None:
         self._data_T = self.data.T

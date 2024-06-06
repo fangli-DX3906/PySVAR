@@ -4,7 +4,7 @@ from tqdm import tqdm
 from typing import Union, Literal, Optional
 
 from base_model import Model
-from auxillary.bricks import estim_sys
+from core.bricks import estim_sys
 
 
 class SVAR(Model):

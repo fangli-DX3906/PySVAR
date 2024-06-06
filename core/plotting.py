@@ -9,6 +9,7 @@ plt.rcParams['font.family'] = 'serif'
 color_set = [pl.diverging.BlueOrange12_2.mpl_colors[0],
              pl.diverging.BlueOrange12_2.mpl_colors[1],
              pl.diverging.BrownBlue10_2.mpl_colors[0],
+             pl.diverging.BrownBlue10_2.mpl_colors[1],
              pl.diverging.GreenMagenta_2.mpl_colors[0],
              pl.diverging.GreenMagenta_2.mpl_colors[1]]
 alpha_list = [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -65,7 +66,7 @@ class Plotting:
                 ax = plt.subplot(n_rows, n_cols, i_var + 1)
                 var_id = self.var_names.index(var_list[i_var])
                 row = var_id + shock_id * self.n_vars
-                plt.plot(x_ticks, irf[row, :], color=color, linewidth=7.5)
+                plt.plot(x_ticks, irf[row, :], color=color, linewidth=6)
                 plt.title(self.var_names[var_id], {'size': 37}, pad=5.)
                 if with_ci:
                     for sig, alpha in zip(sigs, alpha_list[:len(sigs)]):
