@@ -85,7 +85,7 @@ class Model:
             Bhat = np.column_stack((self.intercepts, self.comp_mat[:self.n_vars, :]))
         else:
             Bhat = self.comp_mat[:self.n_vars, :]
-        Bhat = Bhat.T
+        Bhat = Bhat.T  # including an intercept and tall
         self.likelihood_info = {'Y': self.data, 'X': self.x.T,
                                 'Bhat': Bhat, 'sigma': self.cov_mat,
                                 'n': self.n_vars, 't': self.n_obs, 'p': self.lag_order,

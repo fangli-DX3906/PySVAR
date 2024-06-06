@@ -1,7 +1,7 @@
 import numpy as np
 from base_prior import PriorDist
 from typing import Optional
-from statsmodels.api import OLS
+from statsmodels.api import OLS, add_constant
 
 # which to import
 __all__ = ['DiffusePrior', 'NormalDiffusePrior',
@@ -20,8 +20,8 @@ def calc_ar1_coeff(data: np.ndarray):
     ar1_coeff = []
     ar1_sigma = []
     for i in range(data.shape[1]):
-        reg = OLS(data[1:, i], data[:-1, i]).fit()
-        ar1_coeff.append(reg.params[0])
+        reg = OLS(data[1:, i], add_constant(data[:-1, i])).fit()
+        ar1_coeff.append(reg.params[1])
         ar1_sigma.append(reg.mse_resid ** 0.5)
 
     return ar1_coeff, ar1_sigma
@@ -47,20 +47,35 @@ class DiffusePrior(PriorDist):
 
 
 class MinnesotaPrior(PriorDist):
+    """
+
+        Minnesota prior should be passed a parameter dictionary including the hyperparameters:
+            \lambda_1 controls the standard deviation of the prior on own lags
+            \lambda_2 controls the standard deviation of the prior on lags of other variables
+            \lambda_3 controls the speed of higher lags shrinking to zero
+            \lambda_4 controls the prior variance on the constant
+
+            comp_mode controls how the coefficient prior mean is set: 'RandomWalk' or 'AR1'
+            cov_mode controls if the covariance matrix is set known: 'Theil' or 'Strict
+
+    """
+
     def __init__(self,
-                 likelihood: dict,
+                 likelihood_info: dict,
                  params: dict):
 
-        self.likelihood = likelihood
-        self.params = params
+        self.likelihood_info = likelihood_info
         self._parse_likelihood_info()
+
+        self.params = params
         self._parse_dist_param()
+
         self.ar1_coeff, self.ar1_sigma = calc_ar1_coeff(self.Y)
         self.b = 1 if self.constant else 0
         self.np = self.n * self.lag + self.b
 
     def _parse_dist_param(self):
-        self.mode = self.params['mode']  # taking either 'ar1' or 'rw'
+        self.mode = self.params['mode']  # taking either 'AR1' or 'RandomWalk'
         self.lam1 = self.params.get('lambda1', 0.2)
         self.lam2 = self.params.get('lambda2', 0.5)
         self.lam3 = self.params.get('lambda3', 1)
@@ -69,12 +84,12 @@ class MinnesotaPrior(PriorDist):
     def calc_prior_comp_param(self):
         B0 = np.zeros_like(self.Bhat)
 
-        if self.mode == 'ar1':
+        if self.mode == 'AR1':
             for i in range(self.n):
-                B0[i, i + self.b] = self.ar1_coeff[i]
+                B0[i + self.b, i] = self.ar1_coeff[i]
         else:
             for i in range(self.n):
-                B0[i, i + self.b] = 1
+                B0[i + self.b, i] = 1
 
         mn_2 = np.zeros(self.n * self.np)
         for i in range(self.n):
@@ -124,10 +139,10 @@ class MinnesotaPrior(PriorDist):
 
 class NaturalConjugatePrior(PriorDist):
     def __init__(self,
-                 likelihood: dict,
+                 likelihood_info: dict,
                  params: Optional[dict]):
 
-        self.likelihood = likelihood
+        self.likelihood_info = likelihood_info
         self.params = params
         self._parse_likelihood_info()
         self._parse_dist_param()
