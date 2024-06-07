@@ -19,6 +19,7 @@ signs[3, :] = np.array([0, 0, 1, 0, 0, 0, 0, -1])  # residual shock
 var_plot = ['Cash', 'CreditSpread', 'Uncertainty', 'Inflation', 'Output', 'Investment']
 shock_plot = ['Financial', 'Uncertainty']
 
+# frequentest
 fsr = SignRestriction(data=data,
                       var_names=names,
                       shock_names=shocks,
@@ -29,7 +30,7 @@ fsr.identify(n_rotation=200, parallel=True, seed=3906)
 t1 = perf_counter()
 fsr.plot_irf(h=40, var_list=var_plot, shock_list=shock_plot, sigs=[68, 95])
 
-# bayesian method
+# bayesian
 bsr = BayesianSignRestriction(data=data,
                               var_names=names,
                               shock_names=shocks,
