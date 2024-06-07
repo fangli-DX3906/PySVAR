@@ -11,5 +11,3 @@ def calc_ar1_coeff(data: np.ndarray):
         ar1_sigma.append(reg.mse_resid ** 0.5)
 
     return ar1_coeff, ar1_sigma
-
-

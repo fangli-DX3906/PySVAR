@@ -86,10 +86,10 @@ class Model:
         else:
             Bhat = self.comp_mat[:self.n_vars, :]
         Bhat = Bhat.T  # including an intercept and tall
-        self.likelihood_info = {'Y': self.data, 'X': self.x.T,
-                                'Bhat': Bhat, 'sigma': self.cov_mat,
-                                'n': self.n_vars, 't': self.n_obs, 'p': self.lag_order,
-                                'const': self.constant, 'resids': self.residuals}
+        self.likelihood_info = {'Y': self.data, 'y': self.data[self.lag_order:, :],
+                                'X': self.x.T, 'Bhat': Bhat, 'sigma': self.cov_mat,
+                                'n': self.n_vars, 'T': self.n_obs, 'p': self.lag_order,
+                                'constant': self.constant, 'resids': self.residuals}
 
     def prepare_bootstrap(self) -> None:
         self._data_T = self.data.T

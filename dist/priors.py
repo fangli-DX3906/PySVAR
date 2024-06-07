@@ -32,8 +32,8 @@ class DiffusePrior(PriorDist):
         return p_mn_1, p_mn_2
 
     def calc_posterior_cov_param(self, **kwargs):
-        p_iw_1 = self.sigma * self.t
-        p_iw_2 = self.t - self.n
+        p_iw_1 = self.sigma * self.T
+        p_iw_2 = self.T - self.n
         return p_iw_1, p_iw_2
 
 
@@ -60,8 +60,6 @@ class MinnesotaPrior(PriorDist):
         self._parse_likelihood_info()
 
         self.ar1_coeff, self.ar1_sigma = calc_ar1_coeff(self.Y)
-        self.b = 1 if self.constant else 0
-        self.np = self.n * self.lag + self.b
 
         self.params = params
         self.calc_prior_param()
@@ -94,7 +92,7 @@ class MinnesotaPrior(PriorDist):
                 li = [self.lam4 ** 2]
             else:
                 li = []
-            for p in range(self.lag):
+            for p in range(self.p):
                 for j in range(self.n):
                     item = self.lam1 ** 2 / ((p + 1) ** self.lam3 * self.ar1_sigma[j]) ** 2
                     if i != j:
@@ -121,10 +119,9 @@ class MinnesotaPrior(PriorDist):
 
     def calc_posterior_cov_param(self, **kwargs):
         B = kwargs['B']
-        y = self.Y[self.t - self.lag:, :]
-        resids = y - np.dot(self.X, B)
-        p_iw_1 = self.iw_1 + np.dot(resids, resids.T)
-        p_iw_2 = self.iw_2 + self.t
+        resids = self.y - np.dot(self.X, B)
+        p_iw_1 = self.iw_1 + np.dot(resids.T, resids)
+        p_iw_2 = self.iw_2 + self.T
         return p_iw_1, p_iw_2
 
 
@@ -150,8 +147,6 @@ class NaturalConjugatePrior(PriorDist):
         self._parse_likelihood_info()
 
         self.ar1_coeff, self.ar1_sigma = calc_ar1_coeff(self.Y)
-        self.b = 1 if self.constant else 0
-        self.np = self.n * self.lag + self.b
 
         self.params = params
         self.calc_prior_param()
@@ -175,7 +170,7 @@ class NaturalConjugatePrior(PriorDist):
             self.mn_2 = self.params['mn_cov']
             self.iw_1 = self.params['iw_scalar']
             self.iw_2 = self.params['iw_df']
-            if self.iw_2 < self.t:
+            if self.iw_2 < self.n:
                 raise ValueError('Degree of freedom of IW dist is too small.')
 
     def calc_prior_comp_param(self):
@@ -188,7 +183,7 @@ class NaturalConjugatePrior(PriorDist):
             li = [self.lam4 ** 2]
         else:
             li = []
-        for p in range(self.lag):
+        for p in range(self.p):
             for j in range(self.n):
                 item = self.lam1 ** 2 / ((p + 1) ** self.lam3 * self.ar1_sigma[j]) ** 2
                 li.append(item)
@@ -218,8 +213,9 @@ class NaturalConjugatePrior(PriorDist):
         mat3 = np.dot(self.resids, self.resids.T)
         mat4 = np.dot(np.dot(B_tilde.T, np.linalg.inv(omega_tilde)), B_tilde)
         p_iw_1 = mat1 + mat2 + self.iw_1 + mat3 - mat4
+        p_iw_2 = self.T + self.iw_2
 
-        return p_iw_1, self.t + self.iw_2
+        return p_iw_1, p_iw_2
 
 
 class NormalDiffusePrior(PriorDist):
@@ -244,8 +240,6 @@ class NormalDiffusePrior(PriorDist):
         self._parse_likelihood_info()
 
         self.ar1_coeff, self.ar1_sigma = calc_ar1_coeff(self.Y)
-        self.b = 1 if self.constant else 0
-        self.np = self.n * self.lag + self.b
 
         self.params = params
         self.calc_prior_param()
@@ -279,7 +273,7 @@ class NormalDiffusePrior(PriorDist):
                 li = [self.lam4 ** 2]
             else:
                 li = []
-            for p in range(self.lag):
+            for p in range(self.p):
                 for j in range(self.n):
                     item = self.lam1 ** 2 / ((p + 1) ** self.lam3 * self.ar1_sigma[j]) ** 2
                     li.append(item)
@@ -304,8 +298,9 @@ class NormalDiffusePrior(PriorDist):
         mat1 = np.dot(self.resids, self.resids.T)
         mat2 = np.dot(np.dot((B - self.Bhat).T, np.dot(self.X.T, self.X)), (B - self.Bhat))
         p_iw_1 = mat1 + mat2
+        p_iw_2 = self.T
 
-        return p_iw_1, self.t
+        return p_iw_1, p_iw_2
 
 
 ########################################################################################################################

@@ -12,15 +12,19 @@ class PriorDist(metaclass=ABCMeta):
         raise NotImplementedError
 
     def _parse_likelihood_info(self):
-        self.t = self.likelihood_info['t']
+        self.T = self.likelihood_info['T']
         self.n = self.likelihood_info['n']
-        self.lag = self.likelihood_info['p']
+        self.p = self.likelihood_info['p']
         self.Y = self.likelihood_info['Y']
+        self.y = self.likelihood_info['y']
         self.X = self.likelihood_info['X']
         self.Bhat = self.likelihood_info['Bhat']
         self.sigma = self.likelihood_info['sigma']
-        self.constant = self.likelihood_info['const']
+        self.constant = self.likelihood_info['constant']
         self.resids = self.likelihood_info['resids']
+        
+        self.b = 1 if self.constant else 0
+        self.np = self.n * self.p + self.b
 
     def __repr__(self):
         return str(self.__class__).split('.')[-1][:-2]

@@ -17,7 +17,7 @@ class PosteriorGenerator:
     def _parse_likelihood_info(self):
         self.n = self.likelihood_info['n']
         self.p = self.likelihood_info['p']
-        self.constant = self.likelihood_info['const']
+        self.constant = self.likelihood_info['constant']
 
     def _recover_comp_mat(self, comp: np.ndarray):
         id = np.eye(self.n * self.p)

@@ -4,11 +4,11 @@ import numpy as np
 from estimation.var import VAR
 
 # replicate Kilian (2009)
-oil = spio.loadmat('./data/oil.mat')
+oil = spio.loadmat('/Users/fangli/PySVAR/PySVAR/data/oil.mat')
 oil = oil['data']
 names = ['OilProd', 'REA', 'OilPrice']
 shocks = ['Supply', 'Agg Demand', 'Specific Demand']
-m = VAR(data=oil, var_names=names, date_frequency='M', lag_order=24, date_start='197301')
+m = VAR(data=oil, var_names=names, date_frequency='M', lag_order=4, date_start='197301')
 m.estimate()
 
 # estimate the IRF (Figure 3)
