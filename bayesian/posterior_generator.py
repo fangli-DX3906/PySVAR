@@ -1,5 +1,4 @@
 import numpy as np
-from typing import Literal
 
 from dist.distributions import *
 from dist.priors import *
@@ -7,7 +6,7 @@ from dist.priors import *
 
 class PosteriorGenerator:
     def __init__(self,
-                 prior_name: Literal['Diffuse', 'NormalDiffuse', 'Minnesota', 'NaturalConjugate'],
+                 prior_name: str,
                  likelihood_info: dict,
                  prior_params: dict):
 
@@ -20,11 +19,6 @@ class PosteriorGenerator:
         self.p = self.likelihood_info['p']
         self.constant = self.likelihood_info['const']
 
-    def _calc_posterior_dist_params(self, **kwargs):
-        comp_param = self.prior.calc_posterior_comp_param(kwargs['sigma'])
-        cov_param = self.prior.calc_posterior_cov_param()
-        return comp_param, cov_param
-
     def _recover_comp_mat(self, comp: np.ndarray):
         id = np.eye(self.n * self.p)
         comp = comp.reshape((-1, self.n), order='F')
@@ -35,8 +29,20 @@ class PosteriorGenerator:
         return comp
 
     def draw_from_posterior(self, **kwargs):
-        comp_param, cov_param = self._calc_posterior_dist_params(**kwargs)
+        comp_param = self.prior.calc_posterior_comp_param(**kwargs)
+
+        if len(comp_param) == 4:
+            B_tilde = comp_param[2]
+            omega_tilde = comp_param[3]
+            comp_param = comp_param[:2]
+        else:
+            B_tilde = None
+            omega_tilde = None
+
         B = MultiNormalDist(*comp_param)()
         B = self._recover_comp_mat(B)
+
+        cov_param = self.prior.calc_posterior_cov_param(B=B, omega_tilde=omega_tilde, B_tilde=B_tilde)
         sigma = InverseWhishartDist(*cov_param)()
+
         return B, sigma

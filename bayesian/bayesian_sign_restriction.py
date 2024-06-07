@@ -12,7 +12,7 @@ class BayesianSignRestriction(SignRestriction):
                  shock_names: list,
                  target_signs: np.ndarray,
                  constant: bool = True,
-                 prior: Literal['Diffuse', 'Minnesota', 'SteadyState'] = 'Diffuse',
+                 prior: Literal['Diffuse', 'NormalDiffuse', 'Minnesota', 'NaturalConjugate'] = 'Diffuse',
                  prior_params: Optional[dict] = None,
                  lag_order: Optional[int] = None,
                  max_lag_order: Optional[int] = 8,
