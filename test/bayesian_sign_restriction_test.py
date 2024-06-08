@@ -41,3 +41,17 @@ t2 = perf_counter()
 bsr.identify(n_burn=1000, n_sims=100, n_rotation=2, seed=3906)
 t3 = perf_counter()
 bsr.plot_irf(h=40, var_list=var_plot, shock_list=shock_plot, sigs=[68, 95])
+
+# another prior
+prior_params = {'lambda1': 0.2, 'lambda2': 1, 'lambda3': 1, 'lambda4': 10 ** 5, 'comp_mode': 'AR1'}
+bsr1 = BayesianSignRestriction(data=data,
+                               var_names=names,
+                               shock_names=shocks,
+                               target_signs=signs,
+                               prior='NaturalConjugate',
+                               date_frequency='Q',
+                               prior_params=prior_params)
+t4 = perf_counter()
+bsr1.identify(n_burn=1000, n_sims=50, n_rotation=2, seed=3906)
+t5 = perf_counter()
+bsr1.plot_irf(h=40, var_list=var_plot, shock_list=shock_plot, sigs=[68, 95])

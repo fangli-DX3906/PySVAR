@@ -1,7 +1,7 @@
 from typing import Literal, Optional
 import numpy as np
 
-from estimation.svar import PointIdentifiedSVAR
+from core.svar import PointIdentifiedSVAR
 
 
 class RecursiveIdentification(PointIdentifiedSVAR):
@@ -15,7 +15,6 @@ class RecursiveIdentification(PointIdentifiedSVAR):
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic',
                  date_frequency: Literal['M', 'Q', 'A'] = 'Q',
                  date_start: Optional[str] = None):
-
         super().__init__(data=data,
                          var_names=var_names,
                          shock_names=shock_names,

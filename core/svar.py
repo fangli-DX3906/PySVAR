@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from typing import Union, Literal, Optional
 
-from base_model import Model
+from model import Model
 from core.bricks import estim_sys
 
 

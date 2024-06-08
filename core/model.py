@@ -2,9 +2,9 @@ import random
 import numpy as np
 from typing import Literal, Optional, List, Union
 
-from core.bricks import estim_sys, optim_lag
-from core.plotting import Plotting
-from core.tools import Tools
+from bricks import estim_sys, optim_lag
+from plotting import Plotting
+from tools import Tools
 from utils.date_parser import DateParser
 
 

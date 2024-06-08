@@ -3,7 +3,7 @@ import scipy.optimize as spo
 from scipy.linalg import null_space
 from typing import Literal, Optional
 
-from estimation.svar import PointIdentifiedSVAR
+from core.svar import PointIdentifiedSVAR
 
 
 class OptimIdentification(PointIdentifiedSVAR):

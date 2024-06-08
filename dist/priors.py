@@ -85,7 +85,7 @@ class MinnesotaPrior(PriorDist):
         for i in range(self.n):
             B0[i + self.b, i] = self.ar1_coeff[i]
 
-        mn_2 = np.zeros(self.n * self.np)
+        mn_2 = np.zeros((self.n * self.np, self.n * self.np))
         for i in range(self.n):
             scalar = self.ar1_sigma[i] ** 2
             if self.constant:
@@ -119,6 +119,7 @@ class MinnesotaPrior(PriorDist):
 
     def calc_posterior_cov_param(self, **kwargs):
         B = kwargs['B']
+        B = B.reshape((-1, self.n), order='F')
         resids = self.y - np.dot(self.X, B)
         p_iw_1 = self.iw_1 + np.dot(resids.T, resids)
         p_iw_2 = self.iw_2 + self.T
@@ -266,7 +267,7 @@ class NormalDiffusePrior(PriorDist):
         for i in range(self.n):
             B0[i + self.b, i] = self.ar1_coeff[i]
 
-        mn_2 = np.zeros(self.n * self.np)
+        mn_2 = np.zeros((self.n * self.np, self.n * self.np))
         for i in range(self.n):
             scalar = self.ar1_sigma[i] ** 2
             if self.constant:
@@ -284,7 +285,7 @@ class NormalDiffusePrior(PriorDist):
 
     def calc_posterior_comp_param(self, **kwargs):
         sigma = kwargs['sigma']
-        mat1 = np.korn(np.linalg.inv(sigma), np.dot(self.X.T, self.X))
+        mat1 = np.kron(np.linalg.inv(sigma), np.dot(self.X.T, self.X))
         p_mn_2 = np.linalg.inv(np.linalg.inv(self.mn_2) + mat1)
         mat21 = np.dot(np.linalg.inv(self.mn_2), self.mn_1)
         mat22 = np.dot(mat1, self.Bhat.reshape((-1, 1), order='F'))
@@ -295,6 +296,7 @@ class NormalDiffusePrior(PriorDist):
 
     def calc_posterior_cov_param(self, **kwargs):
         B = kwargs['B']
+        B = B.reshape((-1, self.n), order='F')
         mat1 = np.dot(self.resids, self.resids.T)
         mat2 = np.dot(np.dot((B - self.Bhat).T, np.dot(self.X.T, self.X)), (B - self.Bhat))
         p_iw_1 = mat1 + mat2

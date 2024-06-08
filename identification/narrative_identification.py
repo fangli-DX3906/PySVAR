@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Literal, Optional
 
-from estimation.svar import SetIdentifiedSVAR
+from core.svar import SetIdentifiedSVAR
 
 
 class NarrativeIdentification(SetIdentifiedSVAR):
@@ -16,7 +16,6 @@ class NarrativeIdentification(SetIdentifiedSVAR):
                  lag_order: Optional[int] = None,
                  max_lag_order: Optional[int] = 8,
                  info_criterion: Literal['aic', 'bic', 'hqc'] = 'aic'):
-
         super().__init__(data=data,
                          var_names=var_names,
                          shock_names=shock_names,

@@ -1,5 +1,6 @@
 import scipy.io as spio
 import numpy as np
+
 from identification.exclusion_restriction import ExclusionRestriction
 from identification.recursive_identification import RecursiveIdentification
 

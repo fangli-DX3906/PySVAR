@@ -2,7 +2,7 @@ import numpy as np
 import scipy.optimize as spo
 from typing import Literal, Optional, Set
 
-from estimation.svar import PointIdentifiedSVAR
+from core.svar import PointIdentifiedSVAR
 
 
 class ExclusionRestriction(PointIdentifiedSVAR):

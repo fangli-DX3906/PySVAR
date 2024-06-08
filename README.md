@@ -25,7 +25,11 @@ $$
 
 To model the above problem,begin by importing `RecursiveIdentification`. Next, create an instance, utilizing the appropriate parameters
 ``` python
-recr = RecursiveIdentification(data=kdata, var_names=vname, shock_names=sname, date_frequency='M', lag_order=24)
+from identification.recursive_identification import RecursiveIdentification
+
+n = ['OilProd', 'REA', 'OilPrice']
+s = ['Supply', 'Agg Demand', 'Specific Demand']
+recr = RecursiveIdentification(data=o, var_names=n, shock_names=s, lag_order=24, date_frequency='M')
 ```
 
 Once the instance is initialized, invoke `.identify()` for estimation and `.bootstrap()` to calculate the confidence interval
@@ -77,6 +81,8 @@ The future versions will include:
 <u>Jan 2024 update</u>: Support for parallel computing has been implemented for sign restrictions, resulting in a 50% speed increase.
 
 <u>May 2024 update</u>: Support for optimization based identification method.
+
+<u>June 2024 update</u>: Support for several priors.
 
 
 

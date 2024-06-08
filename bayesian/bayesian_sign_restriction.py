@@ -1,5 +1,6 @@
 from typing import Union, Literal, Optional
 import numpy as np
+from tqdm import tqdm
 
 from identification.sign_restriction import SignRestriction
 from bayesian.posterior_generator import PosteriorGenerator
@@ -51,6 +52,8 @@ class BayesianSignRestriction(SignRestriction):
         rotation_list = []
         counter = 0
         n_total = n_burn + n_sims
+        n_draws = n_sims * n_rotation
+        pbar = tqdm(total=n_draws, desc=f'Drawing {n_draws} rotations...')
         cov = self.cov_mat
 
         for _ in range(n_total):
@@ -58,15 +61,20 @@ class BayesianSignRestriction(SignRestriction):
 
             if _ >= n_burn:
                 counter_for_each_draw = 0
+                trim = True
 
                 while counter_for_each_draw < n_rotation:
                     D = self.draw_rotation()
+                    if trim:
+                        comp = self.posterior_generator.recover_comp_mat(comp)
+                        trim = False
                     self.tools.update(rotation=D, comp=comp, cov=cov)
                     _irfs_ = self.tools.estimate_irf(length=length_to_check)
                     irf_sign = np.sign(np.sum(_irfs_, axis=1).reshape((self.n_vars, self.n_vars)))
                     idx, sorted_signs = self._sort_row(irf_sign)
                     diff_sign = self.target_signs - sorted_signs
                     if np.sum(diff_sign ** 2) == self.num_unrestricted:
+                        pbar.update(1)
                         counter += 1
                         counter_for_each_draw += 1
                         D = D[:, idx]

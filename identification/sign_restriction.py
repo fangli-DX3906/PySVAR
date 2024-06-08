@@ -5,7 +5,7 @@ from typing import Literal, Tuple, Optional, List
 from multiprocessing import Lock, Value
 from tqdm import tqdm
 
-from estimation.svar import SetIdentifiedSVAR
+from core.svar import SetIdentifiedSVAR
 
 
 class SignRestriction(SetIdentifiedSVAR):

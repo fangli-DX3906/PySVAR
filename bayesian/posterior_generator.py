@@ -19,7 +19,7 @@ class PosteriorGenerator:
         self.p = self.likelihood_info['p']
         self.constant = self.likelihood_info['constant']
 
-    def _recover_comp_mat(self, comp: np.ndarray):
+    def recover_comp_mat(self, comp: np.ndarray):
         id = np.eye(self.n * self.p)
         comp = comp.reshape((-1, self.n), order='F')
         if self.constant:
@@ -40,7 +40,6 @@ class PosteriorGenerator:
             omega_tilde = None
 
         B = MultiNormalDist(*comp_param)()
-        B = self._recover_comp_mat(B)
 
         cov_param = self.prior.calc_posterior_cov_param(B=B, omega_tilde=omega_tilde, B_tilde=B_tilde)
         sigma = InverseWhishartDist(*cov_param)()
