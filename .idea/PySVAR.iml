@@ -9,8 +9,9 @@
       <sourceFolder url="file://$MODULE_DIR$/dist" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bayesian" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/core" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/new" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.7" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

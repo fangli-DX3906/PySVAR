@@ -65,7 +65,7 @@ class OptimIdentification(PointIdentifiedSVAR):
         target_func = lambda gamma: self.target_function(gamma, comp_mat=comp_mat, cov_mat=cov_mat)
         cons = self.parse_cons_funcs()
 
-        kwargs = {'fun': target_func, 'constraints': cons, 'x0': np.ndarray(self.n_vars)}
+        kwargs = {'fun': target_func, 'constraints': cons, 'x0': np.ones(self.n_vars)}
         res = spo.minimize(**kwargs)
 
         if res.success:
