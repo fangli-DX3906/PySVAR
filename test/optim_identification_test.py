@@ -4,7 +4,7 @@ from scipy.linalg import null_space
 
 from identification.optim_identification import OptimIdentification
 
-data = pd.read_csv('/Users/fangli/PySVAR/PySVAR/data/oil_uncertainty.csv')
+data = pd.read_csv('./data/oil_uncertainty.csv')
 var_names = ['OilVol', 'StockVol', 'VolRatio', 'WorldOilProd', 'IndustrialProd', 'WTISpotPrice', 'OilInventory']
 data = np.array(data[var_names])
 shocks = ['Uncertainty']

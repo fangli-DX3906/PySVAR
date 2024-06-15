@@ -4,7 +4,7 @@ from tqdm import tqdm
 from typing import Union, Literal, List, Optional
 
 from model import Model
-from core.bricks import estim_sys
+from basics import estim_sys
 
 
 class VAR(Model):
