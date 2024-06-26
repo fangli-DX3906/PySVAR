@@ -128,8 +128,7 @@ class Model:
     def hd(self, h: int) -> np.ndarray:
         return self.hd_point_estimate[:, :h + 1]
 
-    def plot_irf(self,
-                 h: int,
+    def plot_irf(self, h: int,
                  var_list: Optional[List[str]] = None,
                  shock_list: Optional[List[str]] = None,
                  sigs: Union[List[int], int] = None,
@@ -174,8 +173,7 @@ class Model:
                             irf_ci=cv_plot,
                             save_path=save_path)
 
-    def plot_vd(self,
-                h: int,
+    def plot_vd(self, h: int,
                 var_list: Optional[List[str]] = None,
                 shock_list: Optional[List[str]] = None,
                 save_path: Optional[str] = None) -> None:

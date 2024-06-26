@@ -53,7 +53,7 @@ for m in mdls:
         m.irf_mat_full[_, 6, :] = np.cumsum(m.irf_mat_full[_, 6, :])
         m.irf_mat_full[_, 1, :] = -m.irf_mat_full[_, 1, :]
         m.irf_mat_full[_, 2, :] = -m.irf_mat_full[_, 2, :]
-   m.plot_irf(h=15, var_list=n, sigs=95, with_ci=True)
+   m.plot_irf(h=15, var_list=n, sigs=[68, 95], with_ci=True)
 ```
 
 where the point estimate and confidence interval are stored in `irf_point_estimate` and `irf_mat_full`, respectively.  Lastly call `.plot_irf()` to plot the impulse response. Here is the plot:
@@ -66,7 +66,7 @@ where the point estimate and confidence interval are stored in `irf_point_estima
 
 ### Updates
 
-<u>Jan 2024 update</u>: Support for parallel computing has been implemented for sign restrictions, resulting in a 50% speed increase.
+<u>Jan 2024 update</u>: Support for parallel computing has been implemented for sign restrictions
 
 <u>May 2024 update</u>: Support for optimization based identification method.
 
