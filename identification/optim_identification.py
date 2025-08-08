@@ -53,6 +53,9 @@ class OptimIdentification(PointIdentifiedSVAR):
 
         return tuple(cons_list)
 
+    def target_function(self, **kwargs):
+        raise NotImplementedError
+
     def solve(self,
               comp_mat: Optional[np.ndarray] = None,
               cov_mat: Optional[np.ndarray] = None) -> Optional[np.ndarray]:

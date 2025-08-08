@@ -119,6 +119,9 @@ class PointIdentifiedSVAR(SVAR):
                          date_frequency=date_frequency,
                          date_start=date_start)
 
+    def solve(self, **kwargs):
+        raise NotImplementedError
+
     def identify(self):
         self.rotation = self.solve()
         self.tools.update(rotation=self.rotation)
